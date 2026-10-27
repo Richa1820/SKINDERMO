@@ -10,12 +10,12 @@ export const DatasetClasses: React.FC = () => {
   const selectedClass = LESION_CLASSES[selectedKey];
 
   return (
-    <section id="dataset" className="py-16 sm:py-24 bg-canvas-50 border-t border-charcoal-200/80">
+    <section id="dataset" className="py-16 sm:py-24 bg-canvas-50 border-t border-charcoal-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
         <div className="max-w-3xl mb-12">
-          <Badge variant="emerald" size="md" className="mb-3">
+          <Badge variant="forest" size="md" className="mb-3">
             HAM10000 Diagnostic Benchmark
           </Badge>
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-charcoal-900">
@@ -30,8 +30,8 @@ export const DatasetClasses: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* Class Selector List (Left 5 Cols) */}
-          <div className="lg:col-span-5 space-y-2.5">
-            <div className="text-xs font-mono uppercase tracking-wider text-charcoal-400 px-1 mb-2">
+          <div className="lg:col-span-5 space-y-2">
+            <div className="text-xs font-mono uppercase tracking-wider text-charcoal-500 px-1 mb-2">
               Select class to inspect clinical taxonomy:
             </div>
 
@@ -45,17 +45,17 @@ export const DatasetClasses: React.FC = () => {
                 <button
                   key={key}
                   onClick={() => setSelectedKey(key)}
-                  className={`w-full text-left p-3.5 rounded-xl border transition-all flex items-center justify-between ${
+                  className={`w-full text-left p-3 rounded-lg border transition-all flex items-center justify-between ${
                     isSelected
-                      ? 'bg-white border-forest-800 shadow-card ring-1 ring-forest-700/20'
-                      : 'bg-white/60 hover:bg-white border-charcoal-200/70 hover:border-charcoal-300'
+                      ? 'bg-white border-sage-600 shadow-card ring-1 ring-sage-600'
+                      : 'bg-white hover:bg-canvas-100 border-charcoal-200'
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <span
-                      className={`font-mono text-xs font-bold px-2 py-1 rounded ${
+                      className={`font-mono text-xs font-bold px-2 py-0.5 rounded ${
                         isSelected
-                          ? 'bg-forest-900 text-white'
+                          ? 'bg-charcoal-900 text-white'
                           : 'bg-canvas-200 text-charcoal-700'
                       }`}
                     >
@@ -72,12 +72,12 @@ export const DatasetClasses: React.FC = () => {
                   </div>
 
                   <span
-                    className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${
+                    className={`text-[10px] font-medium px-2 py-0.5 rounded border ${
                       isMalignant
-                        ? 'bg-rose-50 text-rose-700 border-rose-200'
+                        ? 'bg-rose-50 text-rose-800 border-rose-200'
                         : isPremalignant
-                        ? 'bg-amber-50 text-amber-700 border-amber-200'
-                        : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        ? 'bg-amber-50 text-amber-900 border-amber-200'
+                        : 'bg-sage-50 text-sage-800 border-sage-200'
                     }`}
                   >
                     {cls.clinicalCategory}
@@ -88,10 +88,10 @@ export const DatasetClasses: React.FC = () => {
           </div>
 
           {/* Detailed Inspector Card (Right 7 Cols) */}
-          <div className="lg:col-span-7 bg-white rounded-2xl p-6 sm:p-8 border border-charcoal-200/90 shadow-elevated">
+          <div className="lg:col-span-7 bg-white rounded-xl p-6 sm:p-7 border border-charcoal-200 shadow-card">
             <div className="flex flex-wrap items-center justify-between gap-3 pb-5 border-b border-charcoal-100">
               <div className="flex items-center gap-3">
-                <span className="font-mono text-lg font-bold px-3 py-1 bg-forest-900 text-white rounded-lg">
+                <span className="font-mono text-base font-bold px-3 py-1 bg-charcoal-900 text-white rounded-md">
                   {selectedClass.code}
                 </span>
                 <div>
@@ -106,7 +106,7 @@ export const DatasetClasses: React.FC = () => {
 
               <div className="text-right">
                 <div className="text-xs text-charcoal-400 font-mono">Dataset Frequency</div>
-                <div className="text-2xl font-bold text-forest-950 font-mono">
+                <div className="text-2xl font-bold text-charcoal-900 font-mono">
                   {selectedClass.ham10000Frequency}
                 </div>
               </div>
@@ -115,16 +115,16 @@ export const DatasetClasses: React.FC = () => {
             {/* Description & Clinical Context */}
             <div className="mt-6 space-y-5">
               <div>
-                <h4 className="text-xs font-mono uppercase tracking-wider text-charcoal-400 mb-1.5 flex items-center gap-1.5">
-                  <Info className="w-3.5 h-3.5 text-forest-700" />
+                <h4 className="text-xs font-mono uppercase tracking-wider text-charcoal-500 mb-1.5 flex items-center gap-1.5">
+                  <Info className="w-3.5 h-3.5 text-sage-700" />
                   Clinical Pathology Overview
                 </h4>
-                <p className="text-sm text-charcoal-700 leading-relaxed">
+                <p className="text-xs sm:text-sm text-charcoal-700 leading-relaxed">
                   {selectedClass.description}
                 </p>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-canvas-50 border border-charcoal-200/70 text-xs">
+              <div className="p-3.5 rounded-lg bg-canvas-50 border border-charcoal-200 text-xs">
                 <span className="font-semibold text-charcoal-900 block mb-1">
                   Histopathological Confirmation:
                 </span>
@@ -134,15 +134,15 @@ export const DatasetClasses: React.FC = () => {
               </div>
 
               <div>
-                <h4 className="text-xs font-mono uppercase tracking-wider text-charcoal-400 mb-2 flex items-center gap-1.5">
-                  <Tag className="w-3.5 h-3.5 text-forest-700" />
+                <h4 className="text-xs font-mono uppercase tracking-wider text-charcoal-500 mb-2 flex items-center gap-1.5">
+                  <Tag className="w-3.5 h-3.5 text-sage-700" />
                   Key Dermoscopic Hallmarks & Features
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   {selectedClass.visualHallmarks.map((hallmark, hIdx) => (
                     <div
                       key={hIdx}
-                      className="p-3 rounded-lg bg-forest-50/70 border border-forest-100 text-xs text-forest-900 font-medium"
+                      className="p-2.5 rounded-md bg-sage-50 border border-sage-200 text-xs text-sage-900 font-medium"
                     >
                       {hallmark}
                     </div>
@@ -152,16 +152,16 @@ export const DatasetClasses: React.FC = () => {
 
               {/* Class Imbalance Advisory */}
               {selectedClass.key === 'nv' ? (
-                <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200 text-xs text-amber-900 flex items-start gap-2.5">
-                  <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="p-3.5 rounded-lg bg-amber-50/80 border border-amber-200 text-xs text-amber-900 flex items-start gap-2.5">
+                  <AlertTriangle className="w-4 h-4 text-amber-700 flex-shrink-0 mt-0.5" />
                   <div>
                     <span className="font-semibold">Severe Dataset Imbalance Notice: </span>
                     Melanocytic Nevus (nv) comprises 67.0% of all training samples. Deep models can develop a high prior bias toward this class without focal loss or class-weighted training.
                   </div>
                 </div>
               ) : selectedClass.key === 'df' || selectedClass.key === 'vasc' ? (
-                <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200 text-xs text-amber-900 flex items-start gap-2.5">
-                  <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="p-3.5 rounded-lg bg-amber-50/80 border border-amber-200 text-xs text-amber-900 flex items-start gap-2.5">
+                  <AlertTriangle className="w-4 h-4 text-amber-700 flex-shrink-0 mt-0.5" />
                   <div>
                     <span className="font-semibold">Low Sample Support Notice: </span>
                     This class represents only ~1% of the dataset, posing few-shot generalization challenges for deep convolutional layers.

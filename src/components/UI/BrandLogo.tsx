@@ -32,44 +32,41 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   return (
     <div className={`flex items-center gap-2.5 select-none ${className}`}>
       {/* Custom Dermoscopic Aperture + Neural Topology Emblem */}
-      <div className={`relative flex items-center justify-center ${iconSize} rounded-xl bg-forest-950 text-white shadow-subtle overflow-hidden border border-forest-800/60 flex-shrink-0 group`}>
+      <div className={`relative flex items-center justify-center ${iconSize} rounded-lg bg-charcoal-900 text-white shadow-subtle overflow-hidden border border-charcoal-800 flex-shrink-0`}>
         <svg
           viewBox="0 0 36 36"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="w-full h-full p-1.5 transition-transform duration-500 group-hover:rotate-45"
+          className="w-full h-full p-1.5"
         >
           {/* Outer optical reticle ring */}
-          <circle cx="18" cy="18" r="14" stroke="#286D53" strokeWidth="1.5" strokeDasharray="3 2" opacity="0.7" />
+          <circle cx="18" cy="18" r="14" stroke="#4f6d5a" strokeWidth="1.2" strokeDasharray="2 2" opacity="0.6" />
           
           {/* Inner aperture boundary */}
-          <circle cx="18" cy="18" r="9" stroke="#34D399" strokeWidth="1.75" />
+          <circle cx="18" cy="18" r="8.5" stroke="#8faa98" strokeWidth="1.5" />
           
           {/* Deep lesion focal nucleus */}
-          <circle cx="18" cy="18" r="3.5" fill="#34D399" />
+          <circle cx="18" cy="18" r="3" fill="#8faa98" />
           
           {/* Neural graph nodes */}
-          <circle cx="10" cy="13" r="1.5" fill="#A7F3D0" />
-          <circle cx="26" cy="13" r="1.5" fill="#A7F3D0" />
-          <circle cx="18" cy="28" r="1.5" fill="#A7F3D0" />
+          <circle cx="11" cy="14" r="1.25" fill="#d7e3da" />
+          <circle cx="25" cy="14" r="1.25" fill="#d7e3da" />
+          <circle cx="18" cy="27" r="1.25" fill="#d7e3da" />
           
           {/* Feature connection paths */}
-          <path d="M10 13L18 18M26 13L18 18M18 28L18 18" stroke="#5BA687" strokeWidth="1.2" strokeLinecap="round" />
+          <path d="M11 14L18 18M25 14L18 18M18 27L18 18" stroke="#698874" strokeWidth="1" strokeLinecap="round" />
         </svg>
-
-        {/* Ambient mint specular highlight */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-transparent to-emerald-400/10 pointer-events-none" />
       </div>
 
       <div className="flex flex-col">
         <div className="flex items-center gap-1.5">
-          <span className={`font-bold tracking-tight text-forest-950 ${textSize}`}>
+          <span className={`font-bold tracking-tight text-charcoal-900 ${textSize}`}>
             SKINDERMO
           </span>
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="w-1.5 h-1.5 rounded-full bg-sage-600" />
         </div>
         {showSubtitle && (
-          <span className={`font-mono uppercase tracking-widest text-charcoal-400 font-medium ${subtextSize} -mt-0.5`}>
+          <span className={`font-mono uppercase tracking-wider text-charcoal-500 font-medium ${subtextSize} -mt-0.5`}>
             AI Lesion Research
           </span>
         )}

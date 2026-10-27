@@ -30,10 +30,10 @@ export const ClassDistributionChart: React.FC<ClassDistributionChartProps> = ({
           return (
             <div
               key={key}
-              className={`p-2.5 sm:p-3 rounded-xl border transition-all ${
+              className={`p-2.5 sm:p-3 rounded-lg border transition-all ${
                 isWinner
-                  ? 'bg-forest-50/70 border-forest-300 shadow-sm'
-                  : 'bg-white border-charcoal-100 hover:border-charcoal-200'
+                  ? 'bg-sage-50/70 border-sage-300 shadow-subtle'
+                  : 'bg-white border-charcoal-200'
               }`}
             >
               {/* Top Row: Code, Name, Severity Badge, and Score */}
@@ -42,8 +42,8 @@ export const ClassDistributionChart: React.FC<ClassDistributionChartProps> = ({
                   <span
                     className={`font-mono text-xs font-bold px-2 py-0.5 rounded ${
                       isWinner
-                        ? 'bg-forest-900 text-white'
-                        : 'bg-canvas-200 text-charcoal-700'
+                        ? 'bg-charcoal-900 text-white'
+                        : 'bg-canvas-100 text-charcoal-700 border border-charcoal-200'
                     }`}
                   >
                     {cls.code}
@@ -51,19 +51,19 @@ export const ClassDistributionChart: React.FC<ClassDistributionChartProps> = ({
                   <span
                     className={`text-xs truncate ${
                       isWinner
-                        ? 'font-bold text-forest-950'
+                        ? 'font-bold text-charcoal-900'
                         : 'font-medium text-charcoal-800'
                     }`}
                   >
                     {cls.fullName}
                   </span>
                   <span
-                    className={`hidden sm:inline-block text-[9px] px-1.5 py-0.5 rounded-full border ${
+                    className={`hidden sm:inline-block text-[9px] px-1.5 py-0.5 rounded border ${
                       isMalignant
-                        ? 'bg-rose-50 text-rose-700 border-rose-200'
+                        ? 'bg-rose-50 text-rose-800 border-rose-200'
                         : isPremalignant
-                        ? 'bg-amber-50 text-amber-700 border-amber-200'
-                        : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        ? 'bg-amber-50 text-amber-900 border-amber-200'
+                        : 'bg-sage-50 text-sage-800 border-sage-200'
                     }`}
                   >
                     {cls.clinicalCategory}
@@ -74,14 +74,14 @@ export const ClassDistributionChart: React.FC<ClassDistributionChartProps> = ({
                   <span
                     className={`text-xs ${
                       isWinner
-                        ? 'font-bold text-forest-900 text-sm'
+                        ? 'font-bold text-charcoal-900 text-sm'
                         : 'font-medium text-charcoal-600'
                     }`}
                   >
                     {percentage}%
                   </span>
                   {isWinner && (
-                    <span className="text-[10px] font-mono text-emerald-800 font-bold bg-emerald-100 px-1.5 py-0.2 rounded">
+                    <span className="text-[10px] font-mono text-sage-800 font-bold bg-sage-100 border border-sage-200 px-1.5 py-0.5 rounded">
                       TOP
                     </span>
                   )}
@@ -89,11 +89,11 @@ export const ClassDistributionChart: React.FC<ClassDistributionChartProps> = ({
               </div>
 
               {/* Horizontal Bar */}
-              <div className="w-full h-2 rounded-full bg-canvas-200 overflow-hidden relative">
+              <div className="w-full h-1.5 rounded-full bg-canvas-200 overflow-hidden relative">
                 <div
-                  className={`h-full rounded-full transition-all duration-700 ease-out ${
+                  className={`h-full rounded-full transition-all duration-500 ease-out ${
                     isWinner
-                      ? 'bg-gradient-to-r from-forest-700 to-emerald-500'
+                      ? 'bg-sage-600'
                       : isMalignant
                       ? 'bg-rose-300'
                       : 'bg-charcoal-300'

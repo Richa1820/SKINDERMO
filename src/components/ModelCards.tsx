@@ -9,7 +9,7 @@ interface ModelCardsProps {
 
 export const ModelCards: React.FC<ModelCardsProps> = ({ onSelectModelToAnalyze }) => {
   return (
-    <section id="models" className="py-16 sm:py-20 bg-canvas-100 border-y border-charcoal-200/70">
+    <section id="models" className="py-16 sm:py-20 bg-canvas-100/60 border-y border-charcoal-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
@@ -26,7 +26,7 @@ export const ModelCards: React.FC<ModelCardsProps> = ({ onSelectModelToAnalyze }
         </div>
 
         {/* 3 Model Cards Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {ORDERED_MODEL_KEYS.map((key) => {
             const model = EVALUATED_MODELS[key];
             const isDenseNet = key === 'densenet121';
@@ -35,72 +35,64 @@ export const ModelCards: React.FC<ModelCardsProps> = ({ onSelectModelToAnalyze }
             return (
               <div
                 key={model.id}
-                className="relative rounded-2xl bg-white border border-charcoal-200/90 shadow-card hover:shadow-elevated transition-all duration-300 flex flex-col justify-between overflow-hidden group"
+                className="rounded-xl bg-white border border-charcoal-200 shadow-card hover:shadow-elevated transition-all flex flex-col justify-between overflow-hidden"
               >
-                {/* Top architectural accent strip */}
-                <div
-                  className={`h-1.5 w-full ${
-                    isDenseNet
-                      ? 'bg-gradient-to-r from-emerald-500 to-forest-600'
-                      : isInception
-                      ? 'bg-gradient-to-r from-forest-700 to-charcoal-800'
-                      : 'bg-gradient-to-r from-forest-900 to-emerald-600'
-                  }`}
-                />
+                {/* Subtle top indicator bar */}
+                <div className="h-1 w-full bg-sage-500" />
 
-                <div className="p-6 sm:p-7 space-y-5 flex-1">
+                <div className="p-6 space-y-4 flex-1">
                   {/* Card Header & Badge */}
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <span className="font-mono text-xs font-semibold uppercase tracking-wider text-forest-700 bg-forest-50 px-2.5 py-1 rounded-md border border-forest-200/70">
+                      <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-sage-800 bg-sage-50 px-2 py-0.5 rounded border border-sage-200">
                         {model.badge}
                       </span>
-                      <h3 className="text-2xl font-bold text-charcoal-900 mt-2">
+                      <h3 className="text-xl font-bold text-charcoal-900 mt-2">
                         {model.name}
                       </h3>
                     </div>
-                    <div className="w-10 h-10 rounded-xl bg-canvas-100 flex items-center justify-center text-forest-900 border border-charcoal-200 group-hover:bg-forest-900 group-hover:text-emerald-400 transition-colors">
+                    <div className="w-9 h-9 rounded-lg bg-canvas-100 flex items-center justify-center text-charcoal-700 border border-charcoal-200">
                       {isDenseNet ? (
-                        <GitBranch className="w-5 h-5" />
+                        <GitBranch className="w-4 h-4" />
                       ) : isInception ? (
-                        <Layers className="w-5 h-5" />
+                        <Layers className="w-4 h-4" />
                       ) : (
-                        <Box className="w-5 h-5" />
+                        <Box className="w-4 h-4" />
                       )}
                     </div>
                   </div>
 
                   {/* Weight File Binding Indicator */}
-                  <div className="flex items-center gap-2 p-2.5 rounded-lg bg-canvas-50 border border-charcoal-200/70 font-mono text-xs text-charcoal-700">
-                    <FileCode className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                    <span className="text-charcoal-400">Target File:</span>
+                  <div className="flex items-center gap-2 p-2.5 rounded-md bg-canvas-50 border border-charcoal-200 font-mono text-xs text-charcoal-700">
+                    <FileCode className="w-3.5 h-3.5 text-sage-600 flex-shrink-0" />
+                    <span className="text-charcoal-500">Target File:</span>
                     <span className="font-semibold text-charcoal-900 break-all">
                       {model.filename}
                     </span>
                   </div>
 
                   {/* Narrative Description */}
-                  <p className="text-sm text-charcoal-600 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-charcoal-600 leading-relaxed">
                     {model.description}
                   </p>
 
                   {/* Architecture Specification List */}
-                  <div className="space-y-2.5 pt-2 border-t border-charcoal-100 text-xs">
-                    <div className="flex justify-between items-center py-1 border-b border-charcoal-50">
+                  <div className="space-y-2 pt-2 border-t border-charcoal-100 text-xs">
+                    <div className="flex justify-between items-center py-1 border-b border-charcoal-100">
                       <span className="text-charcoal-500">Input Resolution</span>
                       <span className="font-mono font-semibold text-charcoal-800">
                         {model.inputResolution}
                       </span>
                     </div>
 
-                    <div className="flex justify-between items-center py-1 border-b border-charcoal-50">
+                    <div className="flex justify-between items-center py-1 border-b border-charcoal-100">
                       <span className="text-charcoal-500">Parameter Count</span>
                       <span className="font-mono font-semibold text-charcoal-800">
                         {model.parameters}
                       </span>
                     </div>
 
-                    <div className="flex justify-between items-center py-1 border-b border-charcoal-50">
+                    <div className="flex justify-between items-center py-1 border-b border-charcoal-100">
                       <span className="text-charcoal-500">Network Depth</span>
                       <span className="font-mono font-semibold text-charcoal-800">
                         {model.depth}
@@ -109,15 +101,15 @@ export const ModelCards: React.FC<ModelCardsProps> = ({ onSelectModelToAnalyze }
 
                     <div className="flex justify-between items-center py-1">
                       <span className="text-charcoal-500">Gradient Propagation</span>
-                      <span className="font-semibold text-forest-800 text-right">
+                      <span className="font-semibold text-charcoal-800 text-right">
                         {isDenseNet ? 'Concatenative' : isInception ? 'Auxiliary Factor' : 'Residual Skips'}
                       </span>
                     </div>
                   </div>
 
                   {/* Key Feature Box */}
-                  <div className="p-3 rounded-xl bg-forest-50/60 border border-forest-100 text-xs text-forest-900 flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                  <div className="p-3 rounded-lg bg-sage-50/70 border border-sage-200/80 text-xs text-sage-900 flex items-start gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-sage-600 flex-shrink-0 mt-0.5" />
                     <span>{model.keyFeature}</span>
                   </div>
                 </div>
@@ -131,7 +123,7 @@ export const ModelCards: React.FC<ModelCardsProps> = ({ onSelectModelToAnalyze }
                   {onSelectModelToAnalyze && (
                     <button
                       onClick={() => onSelectModelToAnalyze(model.id)}
-                      className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-semibold text-forest-900 bg-canvas-100 hover:bg-forest-900 hover:text-white transition-all border border-charcoal-200 hover:border-forest-900"
+                      className="mt-4 w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-xs font-semibold text-charcoal-800 bg-canvas-100 hover:bg-charcoal-900 hover:text-white transition-all border border-charcoal-200 hover:border-charcoal-900"
                     >
                       <span>Analyze with {model.name}</span>
                       <ArrowRight className="w-3.5 h-3.5" />

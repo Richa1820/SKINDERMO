@@ -16,22 +16,22 @@ export const Badge: React.FC<BadgeProps> = ({
   className = '',
 }) => {
   const variantStyles = {
-    forest: 'bg-forest-50 text-forest-800 border-forest-200/80',
-    emerald: 'bg-emerald-50 text-emerald-800 border-emerald-200/80',
-    amber: 'bg-amber-50 text-amber-800 border-amber-200/80',
+    forest: 'bg-sage-50 text-sage-800 border-sage-200',
+    emerald: 'bg-sage-50 text-sage-800 border-sage-200',
+    amber: 'bg-amber-50 text-amber-900 border-amber-200/80',
     rose: 'bg-rose-50 text-rose-800 border-rose-200/80',
-    slate: 'bg-charcoal-50 text-charcoal-700 border-charcoal-200',
+    slate: 'bg-charcoal-100 text-charcoal-700 border-charcoal-200',
     outline: 'bg-transparent text-charcoal-700 border-charcoal-200',
   }[variant];
 
   const sizeStyles = {
     sm: 'text-[11px] px-2 py-0.5 gap-1',
-    md: 'text-xs px-2.5 py-1 gap-1.5',
+    md: 'text-xs px-2.5 py-0.75 gap-1.5',
   }[size];
 
   return (
     <span
-      className={`inline-flex items-center font-medium rounded-full border transition-colors ${variantStyles} ${sizeStyles} ${className}`}
+      className={`inline-flex items-center font-medium rounded-md border transition-colors ${variantStyles} ${sizeStyles} ${className}`}
     >
       {icon && <span className="flex-shrink-0">{icon}</span>}
       {children}

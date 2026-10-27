@@ -167,10 +167,10 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={() => !disabled && fileInputRef.current?.click()}
-        className={`relative border-2 border-dashed rounded-2xl p-8 sm:p-10 text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
+        className={`relative border border-dashed rounded-xl p-8 sm:p-10 text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
           isDragOver
-            ? 'border-emerald-500 bg-emerald-50/50 scale-[1.005]'
-            : 'border-charcoal-300 hover:border-forest-600 bg-canvas-50 hover:bg-white'
+            ? 'border-sage-500 bg-sage-50/40'
+            : 'border-charcoal-300 hover:border-sage-500 bg-white hover:bg-canvas-50'
         } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
         <input
@@ -184,21 +184,21 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
         />
 
         {/* Upload Icon Circle */}
-        <div className="w-14 h-14 rounded-2xl bg-white border border-charcoal-200/90 shadow-subtle flex items-center justify-center text-forest-800 mb-4 transition-transform group-hover:scale-105">
-          <UploadCloud className="w-7 h-7 text-forest-700" />
+        <div className="w-12 h-12 rounded-lg bg-canvas-100 border border-charcoal-200 flex items-center justify-center text-sage-700 mb-3.5 shadow-subtle">
+          <UploadCloud className="w-6 h-6 text-sage-700" />
         </div>
 
         <div className="space-y-1.5 max-w-sm">
           <p className="text-sm font-semibold text-charcoal-900">
-            <span className="text-forest-900 underline underline-offset-2">Click to browse</span> or drag and drop dermoscopy image
+            <span className="text-sage-800 underline underline-offset-2">Click to browse</span> or drag and drop dermoscopy image
           </p>
           <p className="text-xs text-charcoal-500">
             Standard high-magnification contact or polarized dermoscopic photographs
           </p>
-          <div className="pt-2 flex items-center justify-center gap-2 text-[11px] font-mono text-charcoal-400">
-            <span className="px-2 py-0.5 rounded bg-canvas-200 text-charcoal-700">JPG</span>
-            <span className="px-2 py-0.5 rounded bg-canvas-200 text-charcoal-700">JPEG</span>
-            <span className="px-2 py-0.5 rounded bg-canvas-200 text-charcoal-700">PNG</span>
+          <div className="pt-2 flex items-center justify-center gap-1.5 text-[11px] font-mono text-charcoal-400">
+            <span className="px-2 py-0.5 rounded bg-canvas-100 border border-charcoal-200 text-charcoal-700">JPG</span>
+            <span className="px-2 py-0.5 rounded bg-canvas-100 border border-charcoal-200 text-charcoal-700">JPEG</span>
+            <span className="px-2 py-0.5 rounded bg-canvas-100 border border-charcoal-200 text-charcoal-700">PNG</span>
             <span>• Max 20MB</span>
           </div>
         </div>
@@ -211,7 +211,7 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
             e.stopPropagation();
             fileInputRef.current?.click();
           }}
-          className="mt-5 px-4 py-2 rounded-xl bg-white border border-charcoal-300 hover:bg-canvas-100 text-xs font-semibold text-charcoal-800 shadow-subtle transition-all"
+          className="mt-4 px-4 py-2 rounded-lg bg-canvas-50 border border-charcoal-200 hover:bg-canvas-100 text-xs font-semibold text-charcoal-800 shadow-subtle transition-all"
         >
           Select File from Computer
         </button>
@@ -219,16 +219,16 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
 
       {/* Error Message */}
       {errorMessage && (
-        <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800 flex items-center gap-2">
+        <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-800 flex items-center gap-2">
           <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
           <span>{errorMessage}</span>
         </div>
       )}
 
       {/* Quick Academic Test Samples Bar */}
-      <div className="pt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-charcoal-600">
-        <span className="font-mono text-[11px] text-charcoal-400 flex items-center gap-1">
-          <Sparkles className="w-3.5 h-3.5 text-forest-600" />
+      <div className="pt-1.5 flex flex-wrap items-center justify-between gap-2 text-xs text-charcoal-600">
+        <span className="font-mono text-[11px] text-charcoal-500 flex items-center gap-1.5">
+          <Sparkles className="w-3.5 h-3.5 text-sage-600" />
           Need a dermoscopy sample image to test?
         </span>
         <div className="flex items-center gap-2">
@@ -236,7 +236,7 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
             type="button"
             disabled={disabled}
             onClick={() => loadSyntheticSample('mel')}
-            className="px-2.5 py-1 rounded-lg bg-canvas-100 hover:bg-canvas-200 border border-charcoal-200 text-[11px] font-mono text-charcoal-700 transition-colors"
+            className="px-2.5 py-1 rounded-md bg-white hover:bg-canvas-100 border border-charcoal-200 text-[11px] font-mono text-charcoal-700 transition-colors"
           >
             Sample: Melanoma (mel)
           </button>
@@ -244,7 +244,7 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
             type="button"
             disabled={disabled}
             onClick={() => loadSyntheticSample('nv')}
-            className="px-2.5 py-1 rounded-lg bg-canvas-100 hover:bg-canvas-200 border border-charcoal-200 text-[11px] font-mono text-charcoal-700 transition-colors"
+            className="px-2.5 py-1 rounded-md bg-white hover:bg-canvas-100 border border-charcoal-200 text-[11px] font-mono text-charcoal-700 transition-colors"
           >
             Sample: Nevus (nv)
           </button>
@@ -252,7 +252,7 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
             type="button"
             disabled={disabled}
             onClick={() => loadSyntheticSample('bkl')}
-            className="px-2.5 py-1 rounded-lg bg-canvas-100 hover:bg-canvas-200 border border-charcoal-200 text-[11px] font-mono text-charcoal-700 transition-colors"
+            className="px-2.5 py-1 rounded-md bg-white hover:bg-canvas-100 border border-charcoal-200 text-[11px] font-mono text-charcoal-700 transition-colors"
           >
             Sample: Keratosis (bkl)
           </button>

@@ -62,8 +62,8 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
   };
 
   return (
-    <section id="workspace" className="py-12 sm:py-16 bg-[#FAF9F6] border-t border-charcoal-200/90 scroll-mt-20">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+    <section id="workspace" className="py-12 sm:py-16 bg-canvas-50 border-t border-charcoal-200 scroll-mt-16">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-7">
         
         {/* Workspace Header */}
         <WorkspaceHeader
@@ -93,7 +93,7 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
           {!imageMeta ? (
             <ImageDropzone onImageSelected={handleImageSelected} disabled={isAnalyzing} />
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-5">
               <ImagePreview
                 imageMeta={imageMeta}
                 onChangeImage={() => handleClearImage()}
@@ -103,9 +103,9 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
 
               {/* Action Button Strip if ready to analyze */}
               {!isAnalyzing && !prediction && !apiErrorResult && (
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-white border border-charcoal-200/90 shadow-card">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl bg-white border border-charcoal-200 shadow-card">
                   <div className="text-xs text-charcoal-600 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span className="w-2 h-2 rounded-full bg-sage-600"></span>
                     <span>
                       Ready to execute forward pass with{' '}
                       <strong className="text-charcoal-900 font-mono">
@@ -118,9 +118,9 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
                     type="button"
                     onClick={handleAnalyze}
                     id="trigger-analyze-btn"
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3 rounded-xl bg-forest-900 text-white font-semibold text-sm shadow-card hover:bg-forest-800 active:scale-[0.98] transition-all group border border-forest-700/60"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-charcoal-900 text-white font-semibold text-xs shadow-subtle hover:bg-charcoal-800 active:scale-[0.99] transition-all border border-charcoal-800"
                   >
-                    <Activity className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+                    <Activity className="w-3.5 h-3.5 text-sage-400" />
                     <span>Analyze Image with {EVALUATED_MODELS[selectedModel].name}</span>
                   </button>
                 </div>

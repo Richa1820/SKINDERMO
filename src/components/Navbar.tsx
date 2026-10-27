@@ -27,57 +27,57 @@ export const Navbar: React.FC<NavbarProps> = ({
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-[#FBFBFA]/90 backdrop-blur-md border-b border-charcoal-200/60 transition-all">
+    <header className="sticky top-0 z-50 bg-canvas-50/95 backdrop-blur-md border-b border-charcoal-200 transition-all">
       {/* Top Academic Advisory Bar */}
-      <div className="bg-forest-950 text-forest-100 text-[11px] py-1.5 px-4 font-mono flex items-center justify-between border-b border-forest-900/50">
+      <div className="bg-canvas-100 text-charcoal-600 text-[11px] py-1.5 px-4 font-mono flex items-center justify-between border-b border-charcoal-200">
         <div className="flex items-center gap-2 max-w-7xl mx-auto w-full justify-between">
           <div className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-            <span className="text-forest-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-sage-500"></span>
+            <span className="text-charcoal-700 tracking-tight">
               ACADEMIC RESEARCH PROTOTYPE • DERMOSCOPIC IMAGE CLASSIFICATION (HAM10000)
             </span>
           </div>
 
-          <div className="hidden md:flex items-center gap-3 text-forest-300">
+          <div className="hidden md:flex items-center gap-3 text-charcoal-500">
             <button
               onClick={onRefreshHealth}
               title="Click to re-ping FastAPI backend"
-              className="flex items-center gap-1.5 hover:text-white transition-colors"
+              className="flex items-center gap-1.5 hover:text-charcoal-900 transition-colors"
             >
               <span
                 className={`w-2 h-2 rounded-full ${
-                  backendStatus.online ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
+                  backendStatus.online ? 'bg-sage-600' : 'bg-amber-500'
                 }`}
               />
               <span className="text-[10px]">
                 API: {backendStatus.online ? 'Online (8000)' : 'Awaiting Server'}
               </span>
             </button>
-            <span className="text-forest-700">|</span>
-            <span className="text-forest-400 text-[10px]">Non-Diagnostic System</span>
+            <span className="text-charcoal-300">|</span>
+            <span className="text-charcoal-500 text-[10px]">Non-Diagnostic System</span>
           </div>
         </div>
       </div>
 
       {/* Main Navbar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20">
+        <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <a href="#overview" className="focus:outline-none focus:ring-2 focus:ring-forest-500 rounded-lg p-1 -m-1">
+          <a href="#overview" className="focus:outline-none focus:ring-1 focus:ring-sage-500 rounded-md p-1 -m-1">
             <BrandLogo size="md" />
           </a>
 
           {/* Desktop Nav Links */}
-          <nav className="hidden lg:flex items-center gap-1 bg-white/70 px-3 py-1.5 rounded-full border border-charcoal-200/80 shadow-subtle">
+          <nav className="hidden lg:flex items-center gap-1">
             {navLinks.map((link) => {
               const isActive = activeSection === link.href.replace('#', '');
               return (
                 <a
                   key={link.label}
                   href={link.href}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
                     isActive
-                      ? 'bg-forest-900 text-white shadow-sm'
+                      ? 'bg-sage-100 text-sage-900 font-semibold'
                       : 'text-charcoal-600 hover:text-charcoal-900 hover:bg-canvas-100'
                   }`}
                 >
@@ -92,12 +92,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={onOpenWorkspace}
               id="nav-explore-analysis-btn"
-              className="group relative inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-forest-900 text-white text-xs font-semibold shadow-card hover:bg-forest-800 active:scale-[0.98] transition-all overflow-hidden border border-forest-700/50"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-charcoal-900 text-white text-xs font-semibold shadow-subtle hover:bg-charcoal-800 active:scale-[0.99] transition-all border border-charcoal-800"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-400/10 to-emerald-500/0 opacity-0 group-hover:opacity-100 transition-opacity" />
-              <Activity className="w-4 h-4 text-emerald-400 transition-transform group-hover:scale-110" />
+              <Activity className="w-3.5 h-3.5 text-sage-400" />
               <span>Explore Analysis</span>
-              <ArrowUpRight className="w-3.5 h-3.5 text-forest-300 group-hover:text-white group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+              <ArrowUpRight className="w-3.5 h-3.5 text-charcoal-400 group-hover:text-white transition-colors" />
             </button>
           </div>
 
@@ -105,16 +104,16 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="flex lg:hidden items-center gap-2">
             <button
               onClick={onOpenWorkspace}
-              className="px-3 py-1.5 rounded-lg bg-forest-900 text-white text-xs font-medium"
+              className="px-3 py-1.5 rounded-md bg-charcoal-900 text-white text-xs font-medium"
             >
               Workspace
             </button>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg text-charcoal-700 hover:bg-canvas-200 focus:outline-none"
+              className="p-1.5 rounded-md text-charcoal-700 hover:bg-canvas-100 focus:outline-none"
               aria-label="Toggle navigation menu"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
@@ -122,13 +121,13 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-white border-b border-charcoal-200 px-4 pt-3 pb-6 space-y-2 shadow-elevated">
+        <div className="lg:hidden bg-white border-b border-charcoal-200 px-4 pt-3 pb-5 space-y-1.5 shadow-card">
           {navLinks.map((link) => (
             <a
               key={link.label}
               href={link.href}
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-lg text-sm font-medium text-charcoal-800 hover:bg-forest-50 hover:text-forest-900"
+              className="block px-3 py-2 rounded-md text-sm font-medium text-charcoal-800 hover:bg-canvas-100 hover:text-charcoal-900"
             >
               {link.label}
             </a>
@@ -139,14 +138,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                 setMobileMenuOpen(false);
                 onOpenWorkspace();
               }}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-forest-900 text-white text-sm font-medium"
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-charcoal-900 text-white text-xs font-medium"
             >
-              <Activity className="w-4 h-4 text-emerald-400" />
+              <Activity className="w-4 h-4 text-sage-400" />
               <span>Launch Analysis Workspace</span>
             </button>
             <div className="flex items-center justify-between text-xs text-charcoal-500 px-2 py-1">
               <span>Backend Status:</span>
-              <span className={backendStatus.online ? 'text-emerald-700 font-medium' : 'text-amber-700 font-medium'}>
+              <span className={backendStatus.online ? 'text-sage-700 font-medium' : 'text-amber-700 font-medium'}>
                 {backendStatus.online ? 'Online' : 'Disconnected (Localhost:8000)'}
               </span>
             </div>

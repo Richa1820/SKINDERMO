@@ -7,7 +7,7 @@ export const Limitations: React.FC = () => {
   const limitationsList = [
     {
       title: 'Class Distribution Imbalance',
-      icon: <Scale className="w-5 h-5 text-forest-700" />,
+      icon: <Scale className="w-5 h-5 text-sage-700" />,
       description:
         'Melanocytic nevi (nv) account for 67% of the reference HAM10000 benchmark, whereas rare classes such as dermatofibroma (df, 1.1%) and vascular lesions (vasc, 1.4%) have drastically limited sample sizes. Consequently, models may show high overall accuracy while exhibiting lower sensitivity on under-represented classes.',
     },
@@ -19,38 +19,38 @@ export const Limitations: React.FC = () => {
     },
     {
       title: 'Hardware & Sensor Domain Shift',
-      icon: <Camera className="w-5 h-5 text-forest-800" />,
+      icon: <Camera className="w-5 h-5 text-sage-700" />,
       description:
         'Dermoscopic cameras, contact liquid immersion methods, and cross-polarized lens illumination create color calibration variances across institutions. Uncalibrated mobile phone camera photos will not yield reliable feature activations.',
     },
     {
       title: 'Demographic & Skin Phototype Bias',
-      icon: <Globe2 className="w-5 h-5 text-forest-700" />,
+      icon: <Globe2 className="w-5 h-5 text-sage-700" />,
       description:
         'Public dermoscopy archives predominantly feature fair skin types (Fitzpatrick types I–III from Australian and Austrian cohorts), limiting algorithmic generalization to higher melanin phototypes (Fitzpatrick IV–VI).',
     },
   ];
 
   return (
-    <section id="limitations" className="py-16 sm:py-24 bg-white border-t border-charcoal-200/80">
+    <section id="limitations" className="py-16 sm:py-24 bg-white border-t border-charcoal-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Prominent Mandatory Academic Medical Disclaimer Box */}
-        <div className="rounded-2xl bg-amber-50/70 border-2 border-amber-300/80 p-6 sm:p-8 shadow-card mb-16">
+        <div className="rounded-xl bg-canvas-50 border border-charcoal-200 p-6 sm:p-7 shadow-card mb-14">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-300 flex items-center justify-center flex-shrink-0 text-amber-800">
-              <ShieldAlert className="w-7 h-7" />
+            <div className="w-10 h-10 rounded-lg bg-sage-100 text-sage-800 border border-sage-200 flex items-center justify-center flex-shrink-0">
+              <ShieldAlert className="w-5 h-5" />
             </div>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-mono uppercase tracking-wider font-bold text-amber-900 bg-amber-200/60 px-2 py-0.5 rounded">
+                <span className="text-[11px] font-mono uppercase tracking-wider font-semibold text-charcoal-700 bg-canvas-200 px-2 py-0.5 rounded border border-charcoal-300">
                   Mandatory Academic Protocol & Disclaimer
                 </span>
               </div>
               <h3 className="text-xl font-bold text-charcoal-900">
                 Non-Diagnostic Research Prototype
               </h3>
-              <p className="text-base text-charcoal-800 font-medium leading-relaxed">
+              <p className="text-sm sm:text-base text-charcoal-800 font-medium leading-relaxed">
                 "{RESEARCH_DISCLAIMER_TEXT}"
               </p>
               <p className="text-xs text-charcoal-600 leading-relaxed pt-1">
@@ -74,17 +74,17 @@ export const Limitations: React.FC = () => {
         </div>
 
         {/* 4 Limitations Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {limitationsList.map((item, idx) => (
             <div
               key={idx}
-              className="p-6 rounded-2xl bg-canvas-50 border border-charcoal-200/80 hover:border-charcoal-300 transition-colors space-y-3"
+              className="p-5 rounded-xl bg-canvas-50 border border-charcoal-200 hover:border-charcoal-300 transition-colors space-y-2.5"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-white border border-charcoal-200 flex items-center justify-center shadow-subtle">
+                <div className="w-9 h-9 rounded-lg bg-white border border-charcoal-200 flex items-center justify-center text-sage-700 shadow-subtle">
                   {item.icon}
                 </div>
-                <h3 className="text-base font-bold text-charcoal-900">
+                <h3 className="text-sm sm:text-base font-bold text-charcoal-900">
                   {item.title}
                 </h3>
               </div>

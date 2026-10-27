@@ -38,26 +38,26 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
               type="button"
               disabled={disabled}
               onClick={() => onSelectModel(key)}
-              className={`p-3.5 rounded-xl border text-left transition-all relative flex flex-col justify-between ${
+              className={`p-3.5 rounded-lg border text-left transition-all relative flex flex-col justify-between ${
                 isSelected
-                  ? 'bg-forest-950 text-white border-forest-800 shadow-card ring-2 ring-forest-600/40'
-                  : 'bg-white hover:bg-canvas-50 text-charcoal-800 border-charcoal-200/90'
+                  ? 'bg-white text-charcoal-900 border-sage-600 shadow-card ring-1 ring-sage-600'
+                  : 'bg-white hover:bg-canvas-100 text-charcoal-800 border-charcoal-200'
               } ${disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
             >
               {/* Selected Check Pill */}
               {isSelected && (
-                <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-emerald-500 text-forest-950 flex items-center justify-center">
-                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                <div className="absolute top-2.5 right-2.5 w-4 h-4 rounded-full bg-sage-600 text-white flex items-center justify-center">
+                  <Check className="w-3 h-3 stroke-[2.5]" />
                 </div>
               )}
 
               <div>
                 <div className="flex items-center gap-2 mb-1.5">
                   <span
-                    className={`p-1.5 rounded-lg ${
+                    className={`p-1.5 rounded-md ${
                       isSelected
-                        ? 'bg-forest-900 text-emerald-400'
-                        : 'bg-canvas-100 text-forest-800'
+                        ? 'bg-sage-100 text-sage-800'
+                        : 'bg-canvas-100 text-charcoal-700'
                     }`}
                   >
                     {isDenseNet ? (
@@ -69,33 +69,23 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
                     )}
                   </span>
                   <div>
-                    <span className="font-bold text-sm block leading-tight">
+                    <span className="font-bold text-sm block leading-tight text-charcoal-900">
                       {model.name}
                     </span>
-                    <span
-                      className={`text-[10px] font-mono ${
-                        isSelected ? 'text-forest-200' : 'text-charcoal-500'
-                      }`}
-                    >
+                    <span className="text-[10px] font-mono text-charcoal-500">
                       {model.inputResolution}
                     </span>
                   </div>
                 </div>
 
-                <div
-                  className={`text-[11px] font-mono mt-2 pt-2 border-t truncate ${
-                    isSelected ? 'border-forest-800/80 text-emerald-300' : 'border-charcoal-100 text-charcoal-600'
-                  }`}
-                >
+                <div className={`text-[11px] font-mono mt-2 pt-2 border-t border-charcoal-100 truncate ${
+                  isSelected ? 'text-sage-800 font-medium' : 'text-charcoal-500'
+                }`}>
                   {model.filename}
                 </div>
               </div>
 
-              <div
-                className={`mt-2 text-[10px] ${
-                  isSelected ? 'text-forest-300' : 'text-charcoal-400'
-                }`}
-              >
+              <div className="mt-2 text-[10px] text-charcoal-400">
                 Params: {model.parameters} • {model.depth}
               </div>
             </button>
