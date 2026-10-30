@@ -1,0 +1,1953 @@
+
+==================== Cell 0 (code) ====================
+
+from google.colab import drive
+
+# Connect Google Drive to Colab
+drive.mount('/content/drive')
+
+--- Outputs (1) ---
+Drive already mounted at /content/drive; to attempt to forcibly remount, call drive.mount("/content/drive", force_remount=True).
+
+
+==================== Cell 1 (code) ====================
+
+import os
+
+# Location of your SKINDERMO folder in Google Drive
+project_path = "/content/drive/MyDrive/SKINDERMO"
+
+# Check whether the folder exists
+print("Folder exists:", os.path.exists(project_path))
+
+# Display the uploaded files
+if os.path.exists(project_path):
+    print("\nFiles inside SKINDERMO:")
+    for item in os.listdir(project_path):
+        print(item)
+
+
+--- Outputs (1) ---
+Folder exists: True
+
+Files inside SKINDERMO:
+HAM10000_images_part_2
+HAM10000_metadata.csv
+HAM10000_images_part_1
+
+
+==================== Cell 2 (code) ====================
+
+# Step 5: Check TensorFlow installation
+
+
+import tensorflow as tf
+
+print("TensorFlow version:", tf.__version__)
+print("GPU available:", bool(tf.config.list_physical_devices('GPU')))
+print("GPUs:", tf.config.list_physical_devices('GPU'))
+
+
+
+--- Outputs (1) ---
+TensorFlow version: 2.21.0
+GPU available: True
+GPUs: [PhysicalDevice(name='/physical_device:GPU:0', device_type='GPU')]
+
+
+==================== Cell 3 (code) ====================
+
+import os
+
+project_path = "/content/drive/MyDrive/SKINDERMO"
+
+print("Files and folders found:")
+
+for root, dirs, files in os.walk(project_path):
+    for file in files:
+        if "metadata" in file.lower():
+            print(os.path.join(root, file))
+
+
+--- Outputs (1) ---
+Files and folders found:
+
+
+==================== Cell 4 (code) ====================
+
+import os
+
+project_path = "/content/drive/MyDrive/SKINDERMO"
+
+print("SKINDERMO folder exists:", os.path.exists(project_path))
+
+print("\nItems inside SKINDERMO:")
+for item in os.listdir(project_path):
+    print(item)
+
+
+--- Outputs (1) ---
+SKINDERMO folder exists: True
+
+Items inside SKINDERMO:
+HAM10000_metadata.csv
+HAM10000_images_part_1
+HAM10000_images_part_2
+
+
+==================== Cell 5 (code) ====================
+
+# Step 10: Load HAM10000 metadata
+
+import os
+import pandas as pd
+
+project_path = "/content/drive/MyDrive/SKINDERMO"
+metadata_path = os.path.join(project_path, "HAM10000_metadata.csv")
+
+# Read the CSV file
+df = pd.read_csv(metadata_path)
+
+# Display dataset details
+print("Total metadata records:", len(df))
+
+print("\nColumns:")
+print(df.columns.tolist())
+
+print("\nImages per disease category:")
+print(df["dx"].value_counts())
+
+print("\nFirst five records:")
+print(df.head())
+
+
+--- Outputs (1) ---
+Total metadata records: 10015
+
+Columns:
+['lesion_id', 'image_id', 'dx', 'dx_type', 'age', 'sex', 'localization']
+
+Images per disease category:
+dx
+nv       6705
+mel      1113
+bkl      1099
+bcc       514
+akiec     327
+vasc      142
+df        115
+Name: count, dtype: int64
+
+First five records:
+     lesion_id      image_id   dx dx_type   age   sex localization
+0  HAM_0000118  ISIC_0027419  bkl   histo  80.0  male        scalp
+1  HAM_0000118  ISIC_0025030  bkl   histo  80.0  male        scalp
+2  HAM_0002730  ISIC_0026769  bkl   histo  80.0  male        scalp
+3  HAM_0002730  ISIC_0025661  bkl   histo  80.0  male        scalp
+4  HAM_0001466  ISIC_0031633  bkl   histo  75.0  male          ear
+
+
+==================== Cell 6 (code) ====================
+
+# Step 11: Check whether metadata images exist
+
+import os
+
+project_path = "/content/drive/MyDrive/SKINDERMO"
+
+# Image folders
+image_folders = [
+    os.path.join(project_path, "HAM10000_images_part_1"),
+    os.path.join(project_path, "HAM10000_images_part_2")
+]
+
+# Collect image filenames
+image_files = set()
+
+for folder in image_folders:
+    for filename in os.listdir(folder):
+        if filename.lower().endswith((".jpg", ".jpeg", ".png")):
+            image_files.add(os.path.splitext(filename)[0])
+
+# Compare image IDs with available files
+metadata_ids = set(df["image_id"].astype(str))
+matched_ids = metadata_ids.intersection(image_files)
+missing_ids = metadata_ids - image_files
+
+print("Metadata records:", len(df))
+print("Unique image IDs:", df["image_id"].nunique())
+print("Image files found:", len(image_files))
+print("Metadata IDs matched to files:", len(matched_ids))
+print("Images missing:", len(missing_ids))
+
+
+--- Outputs (1) ---
+Metadata records: 10015
+Unique image IDs: 10015
+Image files found: 10045
+Metadata IDs matched to files: 10015
+Images missing: 0
+
+
+==================== Cell 7 (code) ====================
+
+# Step 12: Check lesion IDs before splitting
+
+print("Total images:", len(df))
+print("Unique lesions:", df["lesion_id"].nunique())
+print("Images with missing lesion IDs:", df["lesion_id"].isna().sum())
+
+# Check how many images belong to each lesion
+images_per_lesion = df.groupby("lesion_id")["image_id"].count()
+
+print("\nLesions with multiple images:",
+      (images_per_lesion > 1).sum())
+
+print("Maximum images for one lesion:",
+      images_per_lesion.max())
+
+
+--- Outputs (1) ---
+Total images: 10015
+Unique lesions: 7470
+Images with missing lesion IDs: 0
+
+Lesions with multiple images: 1956
+Maximum images for one lesion: 6
+
+
+==================== Cell 8 (code) ====================
+
+# Step 13: Split by lesion_id to prevent data leakage
+
+from sklearn.model_selection import GroupShuffleSplit
+import os
+
+# First, split off 15% of lesions for testing
+split1 = GroupShuffleSplit(
+    n_splits=1, test_size=0.15, random_state=42
+)
+
+train_val_idx, test_idx = next(
+    split1.split(df, groups=df["lesion_id"])
+)
+
+train_val_df = df.iloc[train_val_idx].copy()
+test_df = df.iloc[test_idx].copy()
+
+# Split the remaining data so validation is about 15% overall
+split2 = GroupShuffleSplit(
+    n_splits=1, test_size=0.1765, random_state=42
+)
+
+train_idx, val_idx = next(
+    split2.split(train_val_df, groups=train_val_df["lesion_id"])
+)
+
+train_df = train_val_df.iloc[train_idx].copy()
+val_df = train_val_df.iloc[val_idx].copy()
+
+# Check that no lesion occurs in multiple splits
+train_lesions = set(train_df["lesion_id"])
+val_lesions = set(val_df["lesion_id"])
+test_lesions = set(test_df["lesion_id"])
+
+print("Training images:", len(train_df))
+print("Validation images:", len(val_df))
+print("Testing images:", len(test_df))
+
+print("\nLesion overlap checks:")
+print("Train and validation:", len(train_lesions & val_lesions))
+print("Train and test:", len(train_lesions & test_lesions))
+print("Validation and test:", len(val_lesions & test_lesions))
+
+
+--- Outputs (1) ---
+Training images: 6959
+Validation images: 1529
+Testing images: 1527
+
+Lesion overlap checks:
+Train and validation: 0
+Train and test: 0
+Validation and test: 0
+
+
+==================== Cell 9 (code) ====================
+
+# Step 14: Save dataset splits for all three models
+
+import os
+
+split_path = "/content/drive/MyDrive/SKINDERMO/splits"
+os.makedirs(split_path, exist_ok=True)
+
+train_df.to_csv(
+    os.path.join(split_path, "train.csv"), index=False
+)
+
+val_df.to_csv(
+    os.path.join(split_path, "validation.csv"), index=False
+)
+
+test_df.to_csv(
+    os.path.join(split_path, "test.csv"), index=False
+)
+
+print("Dataset splits saved successfully!")
+print("Location:", split_path)
+print("Files:", os.listdir(split_path))
+
+
+--- Outputs (1) ---
+Dataset splits saved successfully!
+Location: /content/drive/MyDrive/SKINDERMO/splits
+Files: ['train.csv', 'validation.csv', 'test.csv']
+
+
+==================== Cell 10 (code) ====================
+
+# Step 15: Load a small batch of HAM10000 images
+
+import os
+import pandas as pd
+import tensorflow as tf
+
+project_path = "/content/drive/MyDrive/SKINDERMO"
+
+# Load the saved training split
+train_df = pd.read_csv(
+    os.path.join(project_path, "splits", "train.csv")
+)
+
+# Image folders
+image_folders = [
+    os.path.join(project_path, "HAM10000_images_part_1"),
+    os.path.join(project_path, "HAM10000_images_part_2")
+]
+
+# Find the path for an image ID
+def find_image_path(image_id):
+    for folder in image_folders:
+        path = os.path.join(folder, str(image_id) + ".jpg")
+        if os.path.exists(path):
+            return path
+    return None
+
+# Test the first image
+sample_id = train_df.iloc[0]["image_id"]
+sample_path = find_image_path(sample_id)
+
+print("Sample image ID:", sample_id)
+print("Image path:", sample_path)
+print("Image exists:", sample_path is not None)
+
+if sample_path is not None:
+    image = tf.keras.utils.load_img(
+        sample_path, target_size=(224, 224)
+    )
+    print("Image loaded successfully!")
+    print("Image size:", image.size)
+
+
+--- Outputs (1) ---
+Sample image ID: ISIC_0027419
+Image path: /content/drive/MyDrive/SKINDERMO/HAM10000_images_part_1/ISIC_0027419.jpg
+Image exists: True
+Image loaded successfully!
+Image size: (224, 224)
+
+
+==================== Cell 11 (code) ====================
+
+# Step 16: Prepare labels and image preprocessing
+
+import numpy as np
+import pandas as pd
+import tensorflow as tf
+import os
+
+project_path = "/content/drive/MyDrive/SKINDERMO"
+split_path = os.path.join(project_path, "splits")
+
+# Load the saved dataset splits
+train_df = pd.read_csv(os.path.join(split_path, "train.csv"))
+val_df = pd.read_csv(os.path.join(split_path, "validation.csv"))
+test_df = pd.read_csv(os.path.join(split_path, "test.csv"))
+
+# Create one consistent mapping for all three models
+class_names = sorted(train_df["dx"].unique())
+class_to_index = {name: i for i, name in enumerate(class_names)}
+
+print("Class names:", class_names)
+print("Number of classes:", len(class_names))
+print("Class mapping:", class_to_index)
+
+# Convert labels into integer IDs
+for data in [train_df, val_df, test_df]:
+    data["label"] = data["dx"].map(class_to_index)
+
+# Check for unknown labels
+print("\nMissing training labels:", train_df["label"].isna().sum())
+print("Missing validation labels:", val_df["label"].isna().sum())
+print("Missing test labels:", test_df["label"].isna().sum())
+
+
+--- Outputs (1) ---
+Class names: ['akiec', 'bcc', 'bkl', 'df', 'mel', 'nv', 'vasc']
+Number of classes: 7
+Class mapping: {'akiec': 0, 'bcc': 1, 'bkl': 2, 'df': 3, 'mel': 4, 'nv': 5, 'vasc': 6}
+
+Missing training labels: 0
+Missing validation labels: 0
+Missing test labels: 0
+
+
+==================== Cell 12 (code) ====================
+
+# Step 17: Create a reusable image pipeline
+
+import os
+import numpy as np
+import tensorflow as tf
+
+project_path = "/content/drive/MyDrive/SKINDERMO"
+
+image_folders = [
+    os.path.join(project_path, "HAM10000_images_part_1"),
+    os.path.join(project_path, "HAM10000_images_part_2")
+]
+
+# Build a lookup table for image paths
+image_paths = {}
+
+for folder in image_folders:
+    for filename in os.listdir(folder):
+        if filename.lower().endswith((".jpg", ".jpeg", ".png")):
+            image_id = os.path.splitext(filename)[0]
+            image_paths[image_id] = os.path.join(folder, filename)
+
+# Reuse the same class order for every model
+class_names = ['akiec', 'bcc', 'bkl', 'df', 'mel', 'nv', 'vasc']
+class_to_index = {name: i for i, name in enumerate(class_names)}
+
+def make_dataset(dataframe, image_size=224, batch_size=16, training=False):
+    paths = [image_paths[x] for x in dataframe["image_id"]]
+    labels = dataframe["dx"].map(class_to_index).to_numpy(dtype=np.int32)
+
+    ds = tf.data.Dataset.from_tensor_slices((paths, labels))
+
+    def load_image(path, label):
+        image_bytes = tf.io.read_file(path)
+        image = tf.io.decode_jpeg(image_bytes, channels=3)
+        image = tf.image.resize(image, [image_size, image_size])
+        image = tf.cast(image, tf.float32)
+        return image, label
+
+    ds = ds.map(load_image, num_parallel_calls=tf.data.AUTOTUNE)
+
+    if training:
+        ds = ds.shuffle(1000, seed=42)
+
+    return ds.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+
+print("Image files indexed:", len(image_paths))
+print("Image pipeline function created successfully!")
+
+
+--- Outputs (1) ---
+Image files indexed: 10045
+Image pipeline function created successfully!
+
+
+==================== Cell 13 (code) ====================
+
+import os
+import numpy as np
+import tensorflow as tf
+
+project_path = "/content/drive/MyDrive/SKINDERMO"
+
+# Reconnect Drive if needed
+from google.colab import drive
+if not os.path.exists(project_path):
+    drive.mount('/content/drive')
+
+# Load the saved training split
+import pandas as pd
+
+train_df = pd.read_csv(
+    os.path.join(project_path, "splits", "train.csv")
+)
+
+# Index image paths
+image_paths = {}
+
+for folder_name in ["HAM10000_images_part_1", "HAM10000_images_part_2"]:
+    folder = os.path.join(project_path, folder_name)
+    for filename in os.listdir(folder):
+        if filename.lower().endswith((".jpg", ".jpeg", ".png")):
+            image_id = os.path.splitext(filename)[0]
+            image_paths[image_id] = os.path.join(folder, filename)
+
+# Create the image-loading function
+class_to_index = {
+    "akiec": 0, "bcc": 1, "bkl": 2, "df": 3,
+    "mel": 4, "nv": 5, "vasc": 6
+}
+
+def make_dataset(dataframe, image_size=224, batch_size=16, training=False):
+    paths = [image_paths[x] for x in dataframe["image_id"]]
+    labels = dataframe["dx"].map(class_to_index).to_numpy(dtype=np.int32)
+
+    ds = tf.data.Dataset.from_tensor_slices((paths, labels))
+
+    def load_image(path, label):
+        image = tf.io.read_file(path)
+        image = tf.io.decode_image(
+            image, channels=3, expand_animations=False
+        )
+        image = tf.image.resize(image, [image_size, image_size])
+        image = tf.cast(image, tf.float32)
+        return image, label
+
+    ds = ds.map(load_image, num_parallel_calls=1)
+
+    if training:
+        ds = ds.shuffle(1000, seed=42)
+
+    return ds.batch(batch_size).prefetch(1)
+
+print("Image pipeline recreated successfully.")
+print("Images indexed:", len(image_paths))
+print("Training records:", len(train_df))
+
+
+--- Outputs (1) ---
+Image pipeline recreated successfully.
+Images indexed: 10045
+Training records: 6959
+
+
+==================== Cell 14 (code) ====================
+
+images, labels = next(iter(
+    make_dataset(
+        train_df.iloc[:1],
+        image_size=224,
+        batch_size=1
+    )
+))
+
+print("Image shape:", images.shape)
+print("Label:", labels.numpy())
+
+
+--- Outputs (1) ---
+Image shape: (1, 224, 224, 3)
+Label: [2]
+
+
+==================== Cell 15 (code) ====================
+
+# Step 19: Create training and validation datasets
+
+train_ds = make_dataset(
+    train_df,
+    image_size=224,
+    batch_size=16,
+    training=True
+)
+
+val_df = pd.read_csv(
+    "/content/drive/MyDrive/SKINDERMO/splits/validation.csv"
+)
+
+val_ds = make_dataset(
+    val_df,
+    image_size=224,
+    batch_size=16,
+    training=False
+)
+
+print("Training batches:", len(train_ds))
+print("Validation batches:", len(val_ds))
+print("Datasets prepared successfully!")
+
+
+--- Outputs (1) ---
+Training batches: 435
+Validation batches: 96
+Datasets prepared successfully!
+
+
+==================== Cell 16 (code) ====================
+
+# Step 20: Prepare ResNet50
+
+import tensorflow as tf
+from tensorflow.keras.applications import ResNet50
+from tensorflow.keras.applications.resnet50 import preprocess_input
+from tensorflow.keras import layers, models
+
+NUM_CLASSES = 7
+IMG_SIZE = 224
+BATCH_SIZE = 16
+
+# Load ResNet50 pretrained on ImageNet
+base_model = ResNet50(
+    weights="imagenet",
+    include_top=False,
+    input_shape=(IMG_SIZE, IMG_SIZE, 3)
+)
+
+# Freeze the pretrained layers initially
+base_model.trainable = False
+
+# Build the classification model
+inputs = layers.Input(shape=(IMG_SIZE, IMG_SIZE, 3))
+
+x = layers.Lambda(preprocess_input)(inputs)
+x = base_model(x, training=False)
+x = layers.GlobalAveragePooling2D()(x)
+x = layers.Dropout(0.3)(x)
+outputs = layers.Dense(NUM_CLASSES, activation="softmax")(x)
+
+resnet_model = models.Model(inputs, outputs)
+
+# Compile the model
+resnet_model.compile(
+    optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"]
+)
+
+resnet_model.summary()
+
+
+--- Outputs (6) ---
+Downloading data from https://storage.googleapis.com/tensorflow/keras-applications/resnet/resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5
+[1m94765736/94765736[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m6s[0m 0us/step
+
+[1mModel: "functional"[0m
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓
+┃[1m [0m[1mLayer (type)                   [0m[1m [0m┃[1m [0m[1mOutput Shape          [0m[1m [0m┃[1m [0m[1m      Param #[0m[1m [0m┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩
+│ input_layer_1 ([38;5;33mInputLayer[0m)      │ ([38;5;45mNone[0m, [38;5;34m224[0m, [38;5;34m224[0m, [38;5;34m3[0m)    │             [38;5;34m0[0m │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ lambda ([38;5;33mLambda[0m)                 │ ([38;5;45mNone[0m, [38;5;34m224[0m, [38;5;34m224[0m, [38;5;34m3[0m)    │             [38;5;34m0[0m │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ resnet50 ([38;5;33mFunctional[0m)           │ ([38;5;45mNone[0m, [38;5;34m7[0m, [38;5;34m7[0m, [38;5;34m2048[0m)     │    [38;5;34m23,587,712[0m │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ global_average_pooling2d        │ ([38;5;45mNone[0m, [38;5;34m2048[0m)           │             [38;5;34m0[0m │
+│ ([38;5;33mGlobalAveragePooling2D[0m)        │                        │               │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ dropout ([38;5;33mDropout[0m)               │ ([38;5;45mNone[0m, [38;5;34m2048[0m)           │             [38;5;34m0[0m │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ dense ([38;5;33mDense[0m)                   │ ([38;5;45mNone[0m, [38;5;34m7[0m)              │        [38;5;34m14,343[0m │
+└─────────────────────────────────┴────────────────────────┴───────────────┘
+
+[1m Total params: [0m[38;5;34m23,602,055[0m (90.03 MB)
+
+[1m Trainable params: [0m[38;5;34m14,343[0m (56.03 KB)
+
+[1m Non-trainable params: [0m[38;5;34m23,587,712[0m (89.98 MB)
+
+
+==================== Cell 17 (code) ====================
+
+# Step 21: Train ResNet50
+
+import os
+import tensorflow as tf
+
+project_path = "/content/drive/MyDrive/SKINDERMO"
+model_dir = os.path.join(project_path, "models")
+os.makedirs(model_dir, exist_ok=True)
+
+# Save the best model based on validation loss
+checkpoint = tf.keras.callbacks.ModelCheckpoint(
+    filepath=os.path.join(model_dir, "resnet50_best.keras"),
+    monitor="val_loss",
+    save_best_only=True,
+    verbose=1
+)
+
+early_stop = tf.keras.callbacks.EarlyStopping(
+    monitor="val_loss",
+    patience=2,
+    restore_best_weights=True
+)
+
+history_resnet = resnet_model.fit(
+    train_ds,
+    validation_data=val_ds,
+    epochs=3,
+    callbacks=[checkpoint, early_stop]
+)
+
+
+--- Outputs (1) ---
+Epoch 1/3
+[1m435/435[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 5s/step - accuracy: 0.6991 - loss: 0.9193
+Epoch 1: val_loss improved from None to 1.83996, saving model to /content/drive/MyDrive/SKINDERMO/models/resnet50_best.keras
+
+Epoch 1: finished saving model to /content/drive/MyDrive/SKINDERMO/models/resnet50_best.keras
+[1m435/435[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m2833s[0m 6s/step - accuracy: 0.8243 - loss: 0.5721 - val_accuracy: 0.6821 - val_loss: 1.8400
+Epoch 2/3
+[1m435/435[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 147ms/step - accuracy: 0.7377 - loss: 0.9794
+Epoch 2: val_loss did not improve from 1.83996
+[1m435/435[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m88s[0m 181ms/step - accuracy: 0.8530 - loss: 0.5670 - val_accuracy: 0.6920 - val_loss: 2.5991
+Epoch 3/3
+[1m435/435[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 132ms/step - accuracy: 0.7366 - loss: 1.1452
+Epoch 3: val_loss did not improve from 1.83996
+[1m435/435[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m80s[0m 164ms/step - accuracy: 0.8563 - loss: 0.6440 - val_accuracy: 0.6795 - val_loss: 3.2102
+
+
+==================== Cell 18 (code) ====================
+
+import pandas as pd
+import os
+
+project_path = "/content/drive/MyDrive/SKINDERMO"
+
+# Save the ResNet50 training history
+history_df = pd.DataFrame(history_resnet.history)
+history_df.index = history_df.index + 1
+history_df.index.name = "epoch"
+
+history_path = os.path.join(
+    project_path, "resnet50_training_history.csv"
+)
+
+history_df.to_csv(history_path)
+
+print("ResNet50 history saved to:", history_path)
+print(history_df)
+
+
+--- Outputs (1) ---
+
+==================== Cell 19 (code) ====================
+
+from google.colab import drive
+import os
+
+# Reconnect Google Drive
+drive.mount('/content/drive')
+
+# Check the saved ResNet50 model
+model_path = (
+    "/content/drive/MyDrive/SKINDERMO/models/resnet50_best.keras"
+)
+
+print("ResNet50 model exists:", os.path.exists(model_path))
+
+if os.path.exists(model_path):
+    print("Model size (MB):", round(os.path.getsize(model_path) / (1024 * 1024), 2))
+
+
+--- Outputs (1) ---
+Mounted at /content/drive
+ResNet50 model exists: True
+Model size (MB): 90.77
+
+
+==================== Cell 20 (code) ====================
+
+import pandas as pd
+import os
+
+project_path = "/content/drive/MyDrive/SKINDERMO"
+
+# Reconstructed from the training output you shared
+history_df = pd.DataFrame({
+    "accuracy": [0.8243, 0.8530, 0.8563],
+    "loss": [0.5721, 0.5670, 0.6440],
+    "val_accuracy": [0.6821, 0.6920, 0.6795],
+    "val_loss": [1.8400, 2.5991, 3.2102]
+}, index=[1, 2, 3])
+
+history_df.index.name = "epoch"
+
+history_path = os.path.join(
+    project_path, "resnet50_training_history_reconstructed.csv"
+)
+
+history_df.to_csv(history_path)
+
+print("Reconstructed training history saved!")
+print(history_df)
+
+
+--- Outputs (1) ---
+Reconstructed training history saved!
+       accuracy    loss  val_accuracy  val_loss
+epoch                                          
+1        0.8243  0.5721        0.6821    1.8400
+2        0.8530  0.5670        0.6920    2.5991
+3        0.8563  0.6440        0.6795    3.2102
+
+
+==================== Cell 21 (code) ====================
+
+# Reload dataset splits after reconnecting Colab
+
+import os
+import pandas as pd
+import numpy as np
+import tensorflow as tf
+
+project_path = "/content/drive/MyDrive/SKINDERMO"
+split_path = os.path.join(project_path, "splits")
+
+train_df = pd.read_csv(os.path.join(split_path, "train.csv"))
+val_df = pd.read_csv(os.path.join(split_path, "validation.csv"))
+test_df = pd.read_csv(os.path.join(split_path, "test.csv"))
+
+print("Training records:", len(train_df))
+print("Validation records:", len(val_df))
+print("Test records:", len(test_df))
+print("TensorFlow version:", tf.__version__)
+print("GPU available:", bool(tf.config.list_physical_devices("GPU")))
+
+
+--- Outputs (1) ---
+Training records: 6959
+Validation records: 1529
+Test records: 1527
+TensorFlow version: 2.21.0
+GPU available: True
+
+
+==================== Cell 22 (code) ====================
+
+# Rebuild image paths and the dataset pipeline
+
+import os
+import numpy as np
+import tensorflow as tf
+
+project_path = "/content/drive/MyDrive/SKINDERMO"
+
+image_folders = [
+    os.path.join(project_path, "HAM10000_images_part_1"),
+    os.path.join(project_path, "HAM10000_images_part_2")
+]
+
+# Index all available image files
+image_paths = {}
+
+for folder in image_folders:
+    for filename in os.listdir(folder):
+        if filename.lower().endswith((".jpg", ".jpeg", ".png")):
+            image_id = os.path.splitext(filename)[0]
+            image_paths[image_id] = os.path.join(folder, filename)
+
+class_to_index = {
+    "akiec": 0, "bcc": 1, "bkl": 2, "df": 3,
+    "mel": 4, "nv": 5, "vasc": 6
+}
+
+def make_dataset(dataframe, image_size=224, batch_size=16, training=False):
+    paths = [image_paths[x] for x in dataframe["image_id"]]
+    labels = dataframe["dx"].map(class_to_index).to_numpy(dtype=np.int32)
+
+    ds = tf.data.Dataset.from_tensor_slices((paths, labels))
+
+    def load_image(path, label):
+        image = tf.io.read_file(path)
+        image = tf.io.decode_image(
+            image, channels=3, expand_animations=False
+        )
+        image = tf.image.resize(image, [image_size, image_size])
+        image = tf.cast(image, tf.float32)
+        return image, label
+
+    ds = ds.map(load_image, num_parallel_calls=1)
+
+    if training:
+        ds = ds.shuffle(1000, seed=42)
+
+    return ds.batch(batch_size).prefetch(1)
+
+print("Image paths indexed:", len(image_paths))
+print("Dataset pipeline ready!")
+
+
+--- Outputs (1) ---
+Image paths indexed: 10045
+Dataset pipeline ready!
+
+
+==================== Cell 23 (code) ====================
+
+# Step 22: Build DenseNet121
+
+import tensorflow as tf
+from tensorflow.keras import layers, models
+from tensorflow.keras.applications import DenseNet121
+from tensorflow.keras.applications.densenet import preprocess_input
+
+IMG_SIZE = 224
+NUM_CLASSES = 7
+
+# Load pretrained DenseNet121
+base_model = DenseNet121(
+    weights="imagenet",
+    include_top=False,
+    input_shape=(IMG_SIZE, IMG_SIZE, 3)
+)
+
+# Freeze pretrained layers for initial training
+base_model.trainable = False
+
+# Build the classification model
+inputs = layers.Input(shape=(IMG_SIZE, IMG_SIZE, 3))
+
+x = layers.Lambda(preprocess_input)(inputs)
+x = base_model(x, training=False)
+x = layers.GlobalAveragePooling2D()(x)
+x = layers.Dropout(0.3)(x)
+outputs = layers.Dense(NUM_CLASSES, activation="softmax")(x)
+
+densenet_model = models.Model(inputs, outputs)
+
+# Compile the model
+densenet_model.compile(
+    optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"]
+)
+
+densenet_model.summary()
+
+
+--- Outputs (6) ---
+Downloading data from https://storage.googleapis.com/tensorflow/keras-applications/densenet/densenet121_weights_tf_dim_ordering_tf_kernels_notop.h5
+[1m29084464/29084464[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m3s[0m 0us/step
+
+[1mModel: "functional"[0m
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓
+┃[1m [0m[1mLayer (type)                   [0m[1m [0m┃[1m [0m[1mOutput Shape          [0m[1m [0m┃[1m [0m[1m      Param #[0m[1m [0m┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩
+│ input_layer_1 ([38;5;33mInputLayer[0m)      │ ([38;5;45mNone[0m, [38;5;34m224[0m, [38;5;34m224[0m, [38;5;34m3[0m)    │             [38;5;34m0[0m │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ lambda ([38;5;33mLambda[0m)                 │ ([38;5;45mNone[0m, [38;5;34m224[0m, [38;5;34m224[0m, [38;5;34m3[0m)    │             [38;5;34m0[0m │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ densenet121 ([38;5;33mFunctional[0m)        │ ([38;5;45mNone[0m, [38;5;34m7[0m, [38;5;34m7[0m, [38;5;34m1024[0m)     │     [38;5;34m7,037,504[0m │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ global_average_pooling2d        │ ([38;5;45mNone[0m, [38;5;34m1024[0m)           │             [38;5;34m0[0m │
+│ ([38;5;33mGlobalAveragePooling2D[0m)        │                        │               │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ dropout ([38;5;33mDropout[0m)               │ ([38;5;45mNone[0m, [38;5;34m1024[0m)           │             [38;5;34m0[0m │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ dense ([38;5;33mDense[0m)                   │ ([38;5;45mNone[0m, [38;5;34m7[0m)              │         [38;5;34m7,175[0m │
+└─────────────────────────────────┴────────────────────────┴───────────────┘
+
+[1m Total params: [0m[38;5;34m7,044,679[0m (26.87 MB)
+
+[1m Trainable params: [0m[38;5;34m7,175[0m (28.03 KB)
+
+[1m Non-trainable params: [0m[38;5;34m7,037,504[0m (26.85 MB)
+
+
+==================== Cell 24 (code) ====================
+
+# Step 23: Train DenseNet121
+
+import os
+import tensorflow as tf
+
+project_path = "/content/drive/MyDrive/SKINDERMO"
+model_dir = os.path.join(project_path, "models")
+os.makedirs(model_dir, exist_ok=True)
+
+# Save the best checkpoint based on validation loss
+densenet_checkpoint = tf.keras.callbacks.ModelCheckpoint(
+    filepath=os.path.join(model_dir, "densenet121_best.keras"),
+    monitor="val_loss",
+    save_best_only=True,
+    verbose=1
+)
+
+densenet_early_stop = tf.keras.callbacks.EarlyStopping(
+    monitor="val_loss",
+    patience=2,
+    restore_best_weights=True
+)
+
+history_densenet = densenet_model.fit(
+    train_ds,
+    validation_data=val_ds,
+    epochs=3,
+    callbacks=[densenet_checkpoint, densenet_early_stop]
+)
+
+
+--- Outputs (1) ---
+
+==================== Cell 25 (code) ====================
+
+# Recreate training and validation datasets
+
+train_ds = make_dataset(
+    train_df,
+    image_size=224,
+    batch_size=16,
+    training=True
+)
+
+val_ds = make_dataset(
+    val_df,
+    image_size=224,
+    batch_size=16,
+    training=False
+)
+
+print("Training batches:", len(train_ds))
+print("Validation batches:", len(val_ds))
+
+
+--- Outputs (1) ---
+Training batches: 435
+Validation batches: 96
+
+
+==================== Cell 26 (code) ====================
+
+# Train DenseNet121 and save its best checkpoint
+
+import os
+import tensorflow as tf
+
+project_path = "/content/drive/MyDrive/SKINDERMO"
+model_dir = os.path.join(project_path, "models")
+os.makedirs(model_dir, exist_ok=True)
+
+densenet_checkpoint = tf.keras.callbacks.ModelCheckpoint(
+    filepath=os.path.join(model_dir, "densenet121_best.keras"),
+    monitor="val_loss",
+    save_best_only=True,
+    verbose=1
+)
+
+densenet_early_stop = tf.keras.callbacks.EarlyStopping(
+    monitor="val_loss",
+    patience=2,
+    restore_best_weights=True
+)
+
+history_densenet = densenet_model.fit(
+    train_ds,
+    validation_data=val_ds,
+    epochs=3,
+    callbacks=[densenet_checkpoint, densenet_early_stop]
+)
+
+
+--- Outputs (1) ---
+Epoch 1/3
+[1m435/435[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 10s/step - accuracy: 0.5810 - loss: 1.2342
+Epoch 1: val_loss improved from None to 1.82996, saving model to /content/drive/MyDrive/SKINDERMO/models/densenet121_best.keras
+
+Epoch 1: finished saving model to /content/drive/MyDrive/SKINDERMO/models/densenet121_best.keras
+[1m435/435[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m6049s[0m 12s/step - accuracy: 0.7586 - loss: 0.7403 - val_accuracy: 0.6861 - val_loss: 1.8300
+Epoch 2/3
+[1m434/435[0m [32m━━━━━━━━━━━━━━━━━━━[0m[37m━[0m [1m0s[0m 134ms/step - accuracy: 0.6441 - loss: 1.1842
+Epoch 2: val_loss improved from 1.82996 to 1.74757, saving model to /content/drive/MyDrive/SKINDERMO/models/densenet121_best.keras
+
+Epoch 2: finished saving model to /content/drive/MyDrive/SKINDERMO/models/densenet121_best.keras
+[1m435/435[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m81s[0m 166ms/step - accuracy: 0.8010 - loss: 0.6475 - val_accuracy: 0.6874 - val_loss: 1.7476
+Epoch 3/3
+[1m435/435[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 124ms/step - accuracy: 0.6721 - loss: 1.0651
+Epoch 3: val_loss did not improve from 1.74757
+[1m435/435[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m74s[0m 153ms/step - accuracy: 0.8155 - loss: 0.5963 - val_accuracy: 0.6900 - val_loss: 1.8069
+
+
+==================== Cell 27 (code) ====================
+
+import pandas as pd
+import os
+
+project_path = "/content/drive/MyDrive/SKINDERMO"
+
+# Reconstructed from the training output screenshot
+densenet_history_df = pd.DataFrame({
+    "accuracy": [0.7586, 0.8010, 0.8155],
+    "loss": [0.7403, 0.6475, 0.5963],
+    "val_accuracy": [0.6861, 0.6874, 0.6900],
+    "val_loss": [1.8300, 1.7476, 1.8069]
+}, index=[1, 2, 3])
+
+densenet_history_df.index.name = "epoch"
+
+history_path = os.path.join(
+    project_path, "densenet121_training_history_reconstructed.csv"
+)
+
+densenet_history_df.to_csv(history_path)
+
+print("DenseNet121 history saved:", history_path)
+print(densenet_history_df)
+
+
+--- Outputs (1) ---
+
+==================== Cell 28 (code) ====================
+from google.colab import drive
+import os
+
+drive.mount('/content/drive')
+
+project_path = "/content/drive/MyDrive/SKINDERMO"
+os.makedirs(project_path, exist_ok=True)
+
+print("Drive mounted:", os.path.exists("/content/drive/MyDrive"))
+print("SKINDERMO folder exists:", os.path.exists(project_path))
+
+--- Outputs (1) ---
+Mounted at /content/drive
+Drive mounted: True
+SKINDERMO folder exists: True
+
+
+==================== Cell 29 (code) ====================
+densenet_history_df.to_csv(history_path)
+print("DenseNet121 history saved:", history_path)
+
+--- Outputs (1) ---
+DenseNet121 history saved: /content/drive/MyDrive/SKINDERMO/densenet121_training_history_reconstructed.csv
+
+
+==================== Cell 30 (code) ====================
+import os
+
+project_path = "/content/drive/MyDrive/SKINDERMO"
+
+for model in ["resnet50_best.keras", "densenet121_best.keras"]:
+    path = os.path.join(project_path, "models", model)
+    print(model, "exists:", os.path.exists(path))
+
+--- Outputs (1) ---
+resnet50_best.keras exists: False
+densenet121_best.keras exists: False
+
+
+==================== Cell 31 (code) ====================
+from google.colab import drive
+drive.mount('/content/drive')
+
+import os
+
+for folder in [
+    "/content/drive/MyDrive/SKINDERMO",
+    "/content/drive/MyDrive/SKINDERMO/models"
+]:
+    print("\nFolder:", folder)
+    print("Exists:", os.path.exists(folder))
+    if os.path.exists(folder):
+        print(os.listdir(folder)[:30])
+
+--- Outputs (1) ---
+Mounted at /content/drive
+
+Folder: /content/drive/MyDrive/SKINDERMO
+Exists: True
+['HAM10000_metadata.csv', 'HAM10000_images_part_1', 'HAM10000_images_part_2', 'splits', 'models', 'resnet50_training_history_reconstructed.csv', 'densenet121_training_history_reconstructed.csv']
+
+Folder: /content/drive/MyDrive/SKINDERMO/models
+Exists: True
+['resnet50_best.keras', 'densenet121_best.keras']
+
+
+==================== Cell 32 (code) ====================
+import os
+
+model_dir = "/content/drive/MyDrive/SKINDERMO/models"
+
+for filename in ["resnet50_best.keras", "densenet121_best.keras"]:
+    path = os.path.join(model_dir, filename)
+    print(filename, "exists:", os.path.exists(path))
+    if os.path.exists(path):
+        print("Size (MB):", round(os.path.getsize(path) / (1024 * 1024), 2))
+
+--- Outputs (1) ---
+resnet50_best.keras exists: True
+Size (MB): 90.77
+densenet121_best.keras exists: True
+Size (MB): 28.38
+
+
+==================== Cell 33 (code) ====================
+import tensorflow as tf
+
+print("TensorFlow:", tf.__version__)
+print("GPU:", tf.config.list_physical_devices("GPU"))
+
+--- Outputs (1) ---
+TensorFlow: 2.21.0
+GPU: []
+
+
+==================== Cell 34 (code) ====================
+import tensorflow as tf
+
+print("TensorFlow:", tf.__version__)
+print("GPU:", tf.config.list_physical_devices("GPU"))
+
+--- Outputs (1) ---
+TensorFlow: 2.21.0
+GPU: []
+
+
+==================== Cell 35 (code) ====================
+import os
+
+project_path = "/content/drive/MyDrive/SKINDERMO"
+
+print("Dataset metadata:", os.path.exists(
+    os.path.join(project_path, "HAM10000_metadata.csv")
+))
+
+print("Training splits:", os.path.exists(
+    os.path.join(project_path, "splits", "train.csv")
+))
+
+print("Validation splits:", os.path.exists(
+    os.path.join(project_path, "splits", "validation.csv")
+))
+
+print("Test splits:", os.path.exists(
+    os.path.join(project_path, "splits", "test.csv")
+))
+
+for model in ["resnet50_best.keras", "densenet121_best.keras"]:
+    path = os.path.join(project_path, "models", model)
+    print(model, ":", os.path.exists(path))
+
+--- Outputs (1) ---
+Dataset metadata: True
+Training splits: True
+Validation splits: True
+Test splits: True
+resnet50_best.keras : True
+densenet121_best.keras : True
+
+
+==================== Cell 36 (code) ====================
+import os
+
+project_path = "/content/drive/MyDrive/SKINDERMO"
+
+for folder in [
+    "HAM10000_images_part_1",
+    "HAM10000_images_part_2"
+]:
+    path = os.path.join(project_path, folder)
+    print(folder, "exists:", os.path.isdir(path))
+    if os.path.isdir(path):
+        print("Number of files:", len(os.listdir(path)))
+
+--- Outputs (1) ---
+HAM10000_images_part_1 exists: True
+Number of files: 5017
+HAM10000_images_part_2 exists: True
+Number of files: 5028
+
+
+==================== Cell 37 (code) ====================
+import os
+import pandas as pd
+import tensorflow as tf
+from tensorflow.keras.applications import InceptionV3
+from tensorflow.keras.layers import GlobalAveragePooling2D, Dropout, Dense, Rescaling
+from tensorflow.keras.models import Model
+from tensorflow.keras.callbacks import ModelCheckpoint
+
+# Keep TensorFlow on CPU for this run
+tf.config.set_visible_devices([], "GPU")
+
+# Project paths
+project_path = "/content/drive/MyDrive/SKINDERMO"
+model_dir = os.path.join(project_path, "models")
+os.makedirs(model_dir, exist_ok=True)
+
+# Load saved data splits
+train_df = pd.read_csv(os.path.join(project_path, "splits", "train.csv"))
+val_df = pd.read_csv(os.path.join(project_path, "splits", "validation.csv"))
+
+# Find image files
+image_paths = {}
+for folder in ["HAM10000_images_part_1", "HAM10000_images_part_2"]:
+    folder_path = os.path.join(project_path, folder)
+    for filename in os.listdir(folder_path):
+        if filename.lower().endswith((".jpg", ".jpeg", ".png")):
+            image_paths[os.path.splitext(filename)[0]] = os.path.join(
+                folder_path, filename
+            )
+
+# Match the seven classes to integer labels
+class_to_index = {
+    "akiec": 0, "bcc": 1, "bkl": 2, "df": 3,
+    "mel": 4, "nv": 5, "vasc": 6
+}
+
+# Create image paths and labels from the split CSVs
+def prepare_dataframe(df):
+    df = df.copy()
+    df["path"] = df["image_id"].map(image_paths)
+    df = df.dropna(subset=["path"])
+    df["label"] = df["dx"].map(class_to_index)
+    df = df.dropna(subset=["label"])
+    df["label"] = df["label"].astype("int32")
+    return df
+
+train_df = prepare_dataframe(train_df)
+val_df = prepare_dataframe(val_df)
+
+print("Training images:", len(train_df))
+print("Validation images:", len(val_df))
+
+# CPU-friendly input pipeline
+IMAGE_SIZE = 299
+BATCH_SIZE = 8
+
+def load_image(path, label):
+    image = tf.io.read_file(path)
+    image = tf.io.decode_jpeg(image, channels=3)
+    image = tf.image.resize(image, [IMAGE_SIZE, IMAGE_SIZE])
+    image = tf.cast(image, tf.float32)
+    return image, label
+
+def make_dataset(df, training=False):
+    ds = tf.data.Dataset.from_tensor_slices((
+        df["path"].values,
+        df["label"].values
+    ))
+    if training:
+        ds = ds.shuffle(512)
+    ds = ds.map(load_image, num_parallel_calls=2)
+    ds = ds.batch(BATCH_SIZE)
+    return ds.prefetch(1)
+
+train_ds = make_dataset(train_df, training=True)
+val_ds = make_dataset(val_df)
+
+# Build InceptionV3
+base_model = InceptionV3(
+    weights="imagenet",
+    include_top=False,
+    input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3)
+)
+base_model.trainable = False
+
+inputs = tf.keras.Input(shape=(IMAGE_SIZE, IMAGE_SIZE, 3))
+x = Rescaling(1.0 / 127.5, offset=-1)(inputs)
+x = base_model(x, training=False)
+x = GlobalAveragePooling2D()(x)
+x = Dropout(0.3)(x)
+outputs = Dense(7, activation="softmax")(x)
+
+inception_model = Model(inputs, outputs)
+
+inception_model.compile(
+    optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"]
+)
+
+# Save the best checkpoint directly to Google Drive
+checkpoint_path = os.path.join(model_dir, "inceptionv3_best.keras")
+checkpoint = ModelCheckpoint(
+    checkpoint_path,
+    monitor="val_loss",
+    save_best_only=True
+)
+
+# Train for ONE epoch only to test CPU speed
+history_inception = inception_model.fit(
+    train_ds,
+    validation_data=val_ds,
+    epochs=1,
+    callbacks=[checkpoint]
+)
+
+print("Checkpoint exists:", os.path.exists(checkpoint_path))
+
+--- Outputs (1) ---
+Training images: 6959
+Validation images: 1529
+[1m870/870[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m2263s[0m 3s/step - accuracy: 0.8671 - loss: 0.4018 - val_accuracy: 0.6638 - val_loss: 2.1400
+Checkpoint exists: True
+
+
+==================== Cell 38 (code) ====================
+import os
+import pandas as pd
+
+project_path = "/content/drive/MyDrive/SKINDERMO"
+model_path = os.path.join(
+    project_path, "models", "inceptionv3_best.keras"
+)
+
+print("InceptionV3 saved:", os.path.exists(model_path))
+
+if os.path.exists(model_path):
+    print("Model size (MB):", round(
+        os.path.getsize(model_path) / (1024 * 1024), 2
+    ))
+
+history_df = pd.DataFrame(history_inception.history)
+history_path = os.path.join(
+    project_path, "inceptionv3_training_history.csv"
+)
+history_df.to_csv(history_path, index=False)
+
+print("Training history saved:", history_path)
+
+--- Outputs (2) ---
+InceptionV3 saved: False
+
+
+==================== Cell 39 (code) ====================
+import os
+
+project_path = "/content/drive/MyDrive/SKINDERMO"
+model_path = os.path.join(
+    project_path, "models", "inceptionv3_best.keras"
+)
+
+print("InceptionV3 model exists:", os.path.exists(model_path))
+
+--- Outputs (1) ---
+InceptionV3 model exists: False
+
+
+==================== Cell 40 (code) ====================
+from google.colab import drive
+drive.mount('/content/drive')
+
+--- Outputs (1) ---
+Drive already mounted at /content/drive; to attempt to forcibly remount, call drive.mount("/content/drive", force_remount=True).
+
+
+==================== Cell 41 (code) ====================
+import os
+
+project_path = "/content/drive/MyDrive/SKINDERMO"
+
+print("Project folder exists:", os.path.exists(project_path))
+
+if os.path.exists(project_path):
+    print("Folder contents:", os.listdir(project_path))
+
+--- Outputs (1) ---
+Project folder exists: True
+Folder contents: ['HAM10000_metadata.csv', 'HAM10000_images_part_1', 'HAM10000_images_part_2', 'splits', 'models', 'resnet50_training_history_reconstructed.csv', 'densenet121_training_history_reconstructed.csv']
+
+
+==================== Cell 42 (code) ====================
+import os
+
+models_path = "/content/drive/MyDrive/SKINDERMO/models"
+
+print("Models folder contents:")
+for file in os.listdir(models_path):
+    print(file, "-", round(os.path.getsize(os.path.join(models_path, file)) / (1024 * 1024), 2), "MB")
+
+--- Outputs (1) ---
+Models folder contents:
+resnet50_best.keras - 90.77 MB
+densenet121_best.keras - 28.38 MB
+inceptionv3_best.keras - 84.39 MB
+
+
+==================== Cell 43 (code) ====================
+import tensorflow as tf
+import os
+
+model_path = "/content/drive/MyDrive/SKINDERMO/models/inceptionv3_best.keras"
+
+inception_model = tf.keras.models.load_model(model_path)
+
+print("InceptionV3 loaded successfully!")
+print("Input shape:", inception_model.input_shape)
+print("Output shape:", inception_model.output_shape)
+
+--- Outputs (1) ---
+InceptionV3 loaded successfully!
+Input shape: (None, 299, 299, 3)
+Output shape: (None, 7)
+
+
+==================== Cell 44 (code) ====================
+import tensorflow as tf
+import os
+
+models_path = "/content/drive/MyDrive/SKINDERMO/models"
+
+model_files = {
+    "ResNet50": "resnet50_best.keras",
+    "DenseNet121": "densenet121_best.keras",
+    "InceptionV3": "inceptionv3_best.keras"
+}
+
+loaded_models = {}
+
+for name, filename in model_files.items():
+    path = os.path.join(models_path, filename)
+    loaded_models[name] = tf.keras.models.load_model(path)
+
+    print(f"{name}: Loaded successfully")
+    print("Input:", loaded_models[name].input_shape)
+    print("Output:", loaded_models[name].output_shape)
+    print()
+
+--- Outputs (1) ---
+
+==================== Cell 45 (code) ====================
+from tensorflow.keras.applications.resnet50 import preprocess_input as resnet_preprocess
+from tensorflow.keras.applications.densenet import preprocess_input as densenet_preprocess
+
+==================== Cell 46 (code) ====================
+import tensorflow as tf
+import os
+
+models_path = "/content/drive/MyDrive/SKINDERMO/models"
+
+loaded_models = {}
+
+loaded_models["ResNet50"] = tf.keras.models.load_model(
+    os.path.join(models_path, "resnet50_best.keras"),
+    custom_objects={"preprocess_input": resnet_preprocess}
+)
+
+loaded_models["DenseNet121"] = tf.keras.models.load_model(
+    os.path.join(models_path, "densenet121_best.keras"),
+    custom_objects={"preprocess_input": densenet_preprocess}
+)
+
+loaded_models["InceptionV3"] = tf.keras.models.load_model(
+    os.path.join(models_path, "inceptionv3_best.keras"),
+    compile=False
+)
+
+for name, model in loaded_models.items():
+    print(name, "loaded:", model.input_shape, "->", model.output_shape)
+
+--- Outputs (1) ---
+ResNet50 loaded: (None, 224, 224, 3) -> (None, 7)
+DenseNet121 loaded: (None, 224, 224, 3) -> (None, 7)
+InceptionV3 loaded: (None, 299, 299, 3) -> (None, 7)
+
+
+==================== Cell 47 (code) ====================
+import pandas as pd
+import os
+
+project_path = "/content/drive/MyDrive/SKINDERMO"
+
+test_df = pd.read_csv(os.path.join(project_path, "splits", "test.csv"))
+
+print("Test images:", len(test_df))
+print("\nColumns:", test_df.columns.tolist())
+print("\nClass distribution:")
+print(test_df.iloc[:, -1].value_counts())
+
+--- Outputs (1) ---
+Test images: 1527
+
+Columns: ['lesion_id', 'image_id', 'dx', 'dx_type', 'age', 'sex', 'localization']
+
+Class distribution:
+localization
+lower extremity    325
+back               289
+trunk              198
+abdomen            162
+upper extremity    153
+face               131
+chest              100
+foot                46
+neck                32
+unknown             30
+scalp               28
+hand                16
+genital              8
+ear                  6
+acral                3
+Name: count, dtype: int64
+
+
+==================== Cell 48 (code) ====================
+print("Disease class distribution:")
+print(test_df["dx"].value_counts())
+
+print("\nMissing disease labels:", test_df["dx"].isna().sum())
+
+--- Outputs (1) ---
+Disease class distribution:
+dx
+nv       1016
+mel       186
+bkl       172
+bcc        66
+akiec      48
+vasc       29
+df         10
+Name: count, dtype: int64
+
+Missing disease labels: 0
+
+
+==================== Cell 49 (code) ====================
+import os
+
+project_path = "/content/drive/MyDrive/SKINDERMO"
+
+print("Image folder 1 exists:",
+      os.path.exists(os.path.join(project_path, "HAM10000_images_part_1")))
+
+print("Image folder 2 exists:",
+      os.path.exists(os.path.join(project_path, "HAM10000_images_part_2")))
+
+print("\nExample test image IDs:")
+print(test_df["image_id"].head().tolist())
+
+--- Outputs (1) ---
+Image folder 1 exists: True
+Image folder 2 exists: True
+
+Example test image IDs:
+['ISIC_0029176', 'ISIC_0029068', 'ISIC_0029836', 'ISIC_0032129', 'ISIC_0027815']
+
+
+==================== Cell 50 (code) ====================
+import os
+
+project_path = "/content/drive/MyDrive/SKINDERMO"
+
+image_folders = [
+    os.path.join(project_path, "HAM10000_images_part_1"),
+    os.path.join(project_path, "HAM10000_images_part_2")
+]
+
+# Map image IDs to their actual file paths
+image_path_map = {}
+
+for folder in image_folders:
+    for filename in os.listdir(folder):
+        if filename.lower().endswith((".jpg", ".jpeg", ".png")):
+            image_id = os.path.splitext(filename)[0]
+            image_path_map[image_id] = os.path.join(folder, filename)
+
+# Add the paths to the test dataframe
+test_df["image_path"] = test_df["image_id"].map(image_path_map)
+
+print("Total test images:", len(test_df))
+print("Images with valid paths:", test_df["image_path"].notna().sum())
+print("Missing image paths:", test_df["image_path"].isna().sum())
+
+display(test_df[["image_id", "dx", "image_path"]].head())
+
+--- Outputs (2) ---
+Total test images: 1527
+Images with valid paths: 1527
+Missing image paths: 0
+
+       image_id   dx                                         image_path
+0  ISIC_0029176  bkl  /content/drive/MyDrive/SKINDERMO/HAM10000_imag...
+1  ISIC_0029068  bkl  /content/drive/MyDrive/SKINDERMO/HAM10000_imag...
+2  ISIC_0029836  bkl  /content/drive/MyDrive/SKINDERMO/HAM10000_imag...
+3  ISIC_0032129  bkl  /content/drive/MyDrive/SKINDERMO/HAM10000_imag...
+4  ISIC_0027815  bkl  /content/drive/MyDrive/SKINDERMO/HAM10000_imag...
+
+==================== Cell 51 (code) ====================
+import numpy as np
+import tensorflow as tf
+from sklearn.metrics import classification_report, accuracy_score
+from tensorflow.keras.utils import load_img, img_to_array
+
+# Match labels to the model output order
+class_names = ["akiec", "bcc", "bkl", "df", "mel", "nv", "vasc"]
+label_to_index = {name: i for i, name in enumerate(class_names)}
+
+y_true = test_df["dx"].map(label_to_index).to_numpy()
+
+def make_test_images(df, image_size, batch_size=16):
+    paths = df["image_path"].tolist()
+
+    def generator():
+        for path in paths:
+            img = load_img(path, target_size=(image_size, image_size))
+            yield img_to_array(img)
+
+    ds = tf.data.Dataset.from_generator(
+        generator,
+        output_signature=tf.TensorSpec(
+            shape=(image_size, image_size, 3), dtype=tf.float32
+        )
+    )
+    return ds.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+
+results = {}
+
+for name, size in [
+    ("ResNet50", 224),
+    ("DenseNet121", 224),
+    ("InceptionV3", 299)
+]:
+    print(f"\nEvaluating {name}...")
+
+    model = loaded_models[name]
+    test_ds = make_test_images(test_df, size)
+
+    probabilities = model.predict(test_ds, verbose=1)
+    y_pred = np.argmax(probabilities, axis=1)
+
+    accuracy = accuracy_score(y_true, y_pred)
+    results[name] = {
+        "accuracy": accuracy,
+        "predictions": y_pred
+    }
+
+    print(f"\n{name} Test Accuracy: {accuracy:.4f} ({accuracy * 100:.2f}%)")
+    print(classification_report(
+        y_true,
+        y_pred,
+        labels=list(range(7)),
+        target_names=class_names,
+        zero_division=0
+    ))
+
+--- Outputs (6) ---
+
+Evaluating ResNet50...
+[1m96/96[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m341s[0m 4s/step
+
+ResNet50 Test Accuracy: 0.6758 (67.58%)
+              precision    recall  f1-score   support
+
+       akiec       0.16      0.92      0.28        48
+         bcc       0.00      0.00      0.00        66
+         bkl       1.00      0.01      0.01       172
+          df       0.00      0.00      0.00        10
+         mel       1.00      0.01      0.01       186
+          nv       0.78      0.97      0.87      1016
+        vasc       1.00      0.03      0.07        29
+
+    accuracy                           0.68      1527
+   macro avg       0.56      0.28      0.18      1527
+weighted avg       0.78      0.68      0.59      1527
+
+
+Evaluating DenseNet121...
+
+/usr/local/lib/python3.13/dist-packages/keras/src/trainers/epoch_iterator.py:164: UserWarning: Your input ran out of data; interrupting training. Make sure that your dataset or generator can generate at least `steps_per_epoch * epochs` batches. You may need to use the `.repeat()` function when building your dataset.
+  self._interrupted_warning()
+
+[1m96/96[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m254s[0m 3s/step
+
+DenseNet121 Test Accuracy: 0.6706 (67.06%)
+              precision    recall  f1-score   support
+
+       akiec       0.17      0.79      0.28        48
+         bcc       0.00      0.00      0.00        66
+         bkl       0.00      0.00      0.00       172
+          df       0.00      0.00      0.00        10
+         mel       0.00      0.00      0.00       186
+          nv       0.76      0.97      0.85      1016
+        vasc       1.00      0.07      0.13        29
+
+    accuracy                           0.67      1527
+   macro avg       0.28      0.26      0.18      1527
+weighted avg       0.53      0.67      0.58      1527
+
+
+Evaluating InceptionV3...
+
+/usr/local/lib/python3.13/dist-packages/keras/src/trainers/epoch_iterator.py:164: UserWarning: Your input ran out of data; interrupting training. Make sure that your dataset or generator can generate at least `steps_per_epoch * epochs` batches. You may need to use the `.repeat()` function when building your dataset.
+  self._interrupted_warning()
+
+[1m96/96[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m487s[0m 5s/step
+
+InceptionV3 Test Accuracy: 0.6496 (64.96%)
+              precision    recall  f1-score   support
+
+       akiec       0.14      0.77      0.23        48
+         bcc       0.00      0.00      0.00        66
+         bkl       0.00      0.00      0.00       172
+          df       0.00      0.00      0.00        10
+         mel       0.00      0.00      0.00       186
+          nv       0.76      0.94      0.84      1016
+        vasc       0.00      0.00      0.00        29
+
+    accuracy                           0.65      1527
+   macro avg       0.13      0.24      0.15      1527
+weighted avg       0.51      0.65      0.57      1527
+
+
+/usr/local/lib/python3.13/dist-packages/keras/src/trainers/epoch_iterator.py:164: UserWarning: Your input ran out of data; interrupting training. Make sure that your dataset or generator can generate at least `steps_per_epoch * epochs` batches. You may need to use the `.repeat()` function when building your dataset.
+  self._interrupted_warning()
+
+
+==================== Cell 52 (code) ====================
+import os
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.metrics import (
+    accuracy_score, precision_score, recall_score,
+    f1_score, confusion_matrix, ConfusionMatrixDisplay
+)
+
+project_path = "/content/drive/MyDrive/SKINDERMO"
+results_path = os.path.join(project_path, "evaluation_results")
+os.makedirs(results_path, exist_ok=True)
+
+class_names = ["akiec", "bcc", "bkl", "df", "mel", "nv", "vasc"]
+
+comparison = []
+
+for name, result in results.items():
+    y_pred = result["predictions"]
+
+    comparison.append({
+        "Model": name,
+        "Accuracy": accuracy_score(y_true, y_pred),
+        "Macro Precision": precision_score(
+            y_true, y_pred, average="macro", zero_division=0
+        ),
+        "Macro Recall": recall_score(
+            y_true, y_pred, average="macro", zero_division=0
+        ),
+        "Macro F1": f1_score(
+            y_true, y_pred, average="macro", zero_division=0
+        ),
+        "Weighted F1": f1_score(
+            y_true, y_pred, average="weighted", zero_division=0
+        )
+    })
+
+    cm = confusion_matrix(y_true, y_pred, labels=range(7))
+    display = ConfusionMatrixDisplay(
+        confusion_matrix=cm, display_labels=class_names
+    )
+    display.plot(xticks_rotation=45, values_format="d")
+    plt.title(f"{name} — Test Confusion Matrix")
+    plt.tight_layout()
+    plt.savefig(
+        os.path.join(results_path, f"{name.lower()}_confusion_matrix.png"),
+        dpi=150
+    )
+    plt.show()
+    plt.close()
+
+comparison_df = pd.DataFrame(comparison)
+comparison_df.to_csv(
+    os.path.join(results_path, "model_comparison.csv"), index=False
+)
+
+display(comparison_df.round(3))
+print("Results saved to:", results_path)
+
+--- Outputs (4) ---
+<Figure size 640x480 with 2 Axes>
+<Figure size 640x480 with 2 Axes>
+<Figure size 640x480 with 2 Axes>
+
+==================== Cell 53 (code) ====================
+import os
+
+results_path = "/content/drive/MyDrive/SKINDERMO/evaluation_results"
+
+print("Saved result files:")
+print(os.listdir(results_path))
+
+--- Outputs (1) ---
+Saved result files:
+['resnet50_confusion_matrix.png', 'densenet121_confusion_matrix.png', 'inceptionv3_confusion_matrix.png', 'model_comparison.csv']
+
+
+==================== Cell 54 (code) ====================
+import pandas as pd
+from IPython.display import display as show_table
+
+comparison_df = pd.read_csv(
+    "/content/drive/MyDrive/SKINDERMO/evaluation_results/model_comparison.csv"
+)
+
+show_table(comparison_df.round(3))
+
+--- Outputs (1) ---
+         Model  Accuracy  Macro Precision  Macro Recall  Macro F1  Weighted F1
+0     ResNet50     0.676            0.564         0.276     0.176        0.590
+1  DenseNet121     0.671            0.275         0.261     0.180        0.576
+2  InceptionV3     0.650            0.128         0.244     0.153        0.567
+
+==================== Cell 55 (code) ====================
+for name, model in loaded_models.items():
+    print(f"\n{name}")
+    for layer in model.layers:
+        if any(word in layer.name.lower()
+               for word in ["lambda", "rescaling", "preprocess"]):
+            print(layer.name, type(layer).__name__)
+
+--- Outputs (1) ---
+
+ResNet50
+lambda Lambda
+
+DenseNet121
+lambda Lambda
+
+InceptionV3
+rescaling Rescaling
+
+
+==================== Cell 56 (code) ====================
+for name, model in loaded_models.items():
+    print(f"\n--- {name} ---")
+
+    for layer in model.layers:
+        if layer.name.lower() in ["lambda", "rescaling"]:
+            print("Layer:", layer.name)
+            print("Configuration:", layer.get_config())
+
+--- Outputs (1) ---
+
+--- ResNet50 ---
+Layer: lambda
+Configuration: {'name': 'lambda', 'trainable': True, 'dtype': {'module': 'keras', 'class_name': 'DTypePolicy', 'config': {'name': 'float32'}, 'registered_name': None}, 'function': {'module': 'builtins', 'class_name': 'function', 'config': 'preprocess_input', 'registered_name': 'function'}, 'arguments': {}}
+
+--- DenseNet121 ---
+Layer: lambda
+Configuration: {'name': 'lambda', 'trainable': True, 'dtype': {'module': 'keras', 'class_name': 'DTypePolicy', 'config': {'name': 'float32'}, 'registered_name': None}, 'function': {'module': 'builtins', 'class_name': 'function', 'config': 'preprocess_input', 'registered_name': 'function'}, 'arguments': {}}
+
+--- InceptionV3 ---
+Layer: rescaling
+Configuration: {'name': 'rescaling', 'trainable': True, 'dtype': {'module': 'keras', 'class_name': 'DTypePolicy', 'config': {'name': 'float32'}, 'registered_name': None}, 'scale': 0.00784313725490196, 'offset': -1}
+
+
+==================== Cell 57 (code) ====================
+import os
+
+project_path = "/content/drive/MyDrive/SKINDERMO"
+
+print("Project files:")
+for item in os.listdir(project_path):
+    print(item)
+
+--- Outputs (1) ---
+Project files:
+HAM10000_metadata.csv
+HAM10000_images_part_1
+HAM10000_images_part_2
+splits
+models
+resnet50_training_history_reconstructed.csv
+densenet121_training_history_reconstructed.csv
+evaluation_results
+

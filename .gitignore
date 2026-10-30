@@ -19,3 +19,6 @@ dist/
 *.keras
 *.h5
 *.hdf5
+*.tflite
+
+scratch/test_images/

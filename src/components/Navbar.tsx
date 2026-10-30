@@ -19,65 +19,34 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { label: 'Overview', href: '#overview' },
-    { label: 'Models', href: '#models' },
-    { label: 'How It Works', href: '#how-it-works' },
-    { label: 'Dataset & Classes', href: '#dataset' },
-    { label: 'Limitations', href: '#limitations' },
+    { label: 'Home', href: '#home' },
+    { label: 'About', href: '#about' },
+    { label: 'Technology', href: '#technology' },
+    { label: 'Contact', href: '#contact' },
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-canvas-50/95 backdrop-blur-md border-b border-charcoal-200 transition-all">
-      {/* Top Academic Advisory Bar */}
-      <div className="bg-canvas-100 text-charcoal-600 text-[11px] py-1.5 px-4 font-mono flex items-center justify-between border-b border-charcoal-200">
-        <div className="flex items-center gap-2 max-w-7xl mx-auto w-full justify-between">
-          <div className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-sage-500"></span>
-            <span className="text-charcoal-700 tracking-tight">
-              ACADEMIC RESEARCH PROTOTYPE • DERMOSCOPIC IMAGE CLASSIFICATION (HAM10000)
-            </span>
-          </div>
-
-          <div className="hidden md:flex items-center gap-3 text-charcoal-500">
-            <button
-              onClick={onRefreshHealth}
-              title="Click to re-ping FastAPI backend"
-              className="flex items-center gap-1.5 hover:text-charcoal-900 transition-colors"
-            >
-              <span
-                className={`w-2 h-2 rounded-full ${
-                  backendStatus.online ? 'bg-sage-600' : 'bg-amber-500'
-                }`}
-              />
-              <span className="text-[10px]">
-                API: {backendStatus.online ? 'Online (8000)' : 'Awaiting Server'}
-              </span>
-            </button>
-            <span className="text-charcoal-300">|</span>
-            <span className="text-charcoal-500 text-[10px]">Non-Diagnostic System</span>
-          </div>
-        </div>
-      </div>
-
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-charcoal-200 transition-all shadow-subtle">
       {/* Main Navbar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <a href="#overview" className="focus:outline-none focus:ring-1 focus:ring-sage-500 rounded-md p-1 -m-1">
+          <a href="#home" className="focus:outline-none focus:ring-1 focus:ring-teal-500 rounded-md p-1 -m-1">
             <BrandLogo size="md" />
           </a>
 
           {/* Desktop Nav Links */}
           <nav className="hidden lg:flex items-center gap-1">
             {navLinks.map((link) => {
-              const isActive = activeSection === link.href.replace('#', '');
+              const sectionId = link.href.replace('#', '');
+              const isActive = activeSection === sectionId;
               return (
                 <a
                   key={link.label}
                   href={link.href}
-                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-sage-100 text-sage-900 font-semibold'
+                      ? 'bg-teal-50 text-teal-900 font-semibold'
                       : 'text-charcoal-600 hover:text-charcoal-900 hover:bg-canvas-100'
                   }`}
                 >
@@ -89,14 +58,30 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* CTA Button and Status */}
           <div className="hidden sm:flex items-center gap-3">
+            {/* API Status indicator */}
+            <button
+              onClick={onRefreshHealth}
+              title="Click to re-ping FastAPI backend"
+              className="flex items-center gap-1.5 hover:text-charcoal-900 transition-colors text-xs text-charcoal-500"
+            >
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  backendStatus.online ? 'bg-teal-600 animate-pulse' : 'bg-amber-500'
+                }`}
+              />
+              <span className="font-mono text-[11px]">
+                {backendStatus.online ? 'API Online' : 'API Offline'}
+              </span>
+            </button>
+
             <button
               onClick={onOpenWorkspace}
-              id="nav-explore-analysis-btn"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-charcoal-900 text-white text-xs font-semibold shadow-subtle hover:bg-charcoal-800 active:scale-[0.99] transition-all border border-charcoal-800"
+              id="nav-get-started-btn"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-700 text-white text-xs font-semibold shadow-subtle hover:bg-teal-800 active:scale-[0.99] transition-all border border-teal-800"
             >
-              <Activity className="w-3.5 h-3.5 text-sage-400" />
-              <span>Explore Analysis</span>
-              <ArrowUpRight className="w-3.5 h-3.5 text-charcoal-400 group-hover:text-white transition-colors" />
+              <Activity className="w-3.5 h-3.5 text-teal-200" />
+              <span>Get Started</span>
+              <ArrowUpRight className="w-3.5 h-3.5 text-teal-300" />
             </button>
           </div>
 
@@ -104,13 +89,13 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="flex lg:hidden items-center gap-2">
             <button
               onClick={onOpenWorkspace}
-              className="px-3 py-1.5 rounded-md bg-charcoal-900 text-white text-xs font-medium"
+              className="px-3.5 py-2 rounded-xl bg-teal-700 text-white text-xs font-semibold"
             >
-              Workspace
+              Get Started
             </button>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-1.5 rounded-md text-charcoal-700 hover:bg-canvas-100 focus:outline-none"
+              className="p-2 rounded-lg text-charcoal-700 hover:bg-canvas-100 focus:outline-none"
               aria-label="Toggle navigation menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -127,7 +112,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               key={link.label}
               href={link.href}
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-md text-sm font-medium text-charcoal-800 hover:bg-canvas-100 hover:text-charcoal-900"
+              className="block px-3.5 py-2.5 rounded-lg text-sm font-medium text-charcoal-800 hover:bg-canvas-100 hover:text-charcoal-900"
             >
               {link.label}
             </a>
@@ -138,15 +123,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                 setMobileMenuOpen(false);
                 onOpenWorkspace();
               }}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-charcoal-900 text-white text-xs font-medium"
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-teal-700 text-white text-sm font-semibold"
             >
-              <Activity className="w-4 h-4 text-sage-400" />
-              <span>Launch Analysis Workspace</span>
+              <Activity className="w-4 h-4 text-teal-200" />
+              <span>Get Started – Prediction</span>
             </button>
-            <div className="flex items-center justify-between text-xs text-charcoal-500 px-2 py-1">
-              <span>Backend Status:</span>
-              <span className={backendStatus.online ? 'text-sage-700 font-medium' : 'text-amber-700 font-medium'}>
-                {backendStatus.online ? 'Online' : 'Disconnected (Localhost:8000)'}
+            <div className="flex items-center justify-between text-xs text-charcoal-500 px-2 py-1 font-mono">
+              <span>Backend API:</span>
+              <span className={backendStatus.online ? 'text-teal-700 font-medium' : 'text-amber-700 font-medium'}>
+                {backendStatus.online ? 'Online (Port 8000)' : 'Offline – Start uvicorn'}
               </span>
             </div>
           </div>

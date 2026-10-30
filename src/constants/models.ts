@@ -46,9 +46,91 @@ export const EVALUATED_MODELS: Record<string, ModelInfo> = {
     gradientFlow: 'Auxiliary classification branches and factorization reduce representational bottlenecks.',
     academicCitation: 'Szegedy, C. et al. (CVPR 2016) Rethinking the Inception Architecture for Computer Vision.',
   },
+  ensemble: {
+    id: 'ensemble',
+    name: 'Tri-Model Ensemble',
+    badge: 'Soft-Voting Consensus',
+    filename: 'resnet50 + densenet121 + inceptionv3',
+    architecture: 'Multi-Architecture Soft-Voting Probability Average',
+    inputResolution: 'Multi-Scale (224 & 299)',
+    parameters: '57.5M Combined',
+    depth: 'Combined',
+    description:
+      'Integrates predictions from ResNet-50, DenseNet-121, and Inception-V3 via arithmetic average probability voting across all 7 diagnostic classes, evaluating architectural consensus and model divergence.',
+    keyFeature: 'Heterogeneous tri-model cross-validation with consensus agreement tracking (unanimous / majority / discordant).',
+    gradientFlow: 'Combines additive residual, dense concatenative, and multi-scale receptive field inductive biases.',
+    academicCitation: 'Ensemble Learning across Heterogeneous Deep CNN Architectures.',
+  },
+  best: {
+    id: 'best',
+    name: 'Best Model (Auto)',
+    badge: 'Validation Top-Ranked',
+    filename: 'resnet50_best.keras (Rank #1)',
+    architecture: 'Auto-Selects Empirical Top-Performing Architecture (ResNet-50)',
+    inputResolution: '224 × 224 × 3',
+    parameters: '25.6M',
+    depth: '50 layers',
+    description:
+      'Dynamically selects ResNet-50, which demonstrated the highest classification accuracy (67.58%) and weighted F1-score (58.98%) in the empirical validation benchmark across all seven HAM10000 diagnostic classes.',
+    keyFeature: 'Highest empirical validation accuracy (67.58%) and weighted F1 score (58.98%).',
+    gradientFlow: 'Additive residual skips enable uninhibited gradient backpropagation.',
+    academicCitation: 'Empirical validation results on held-out test split (HAM10000).',
+  },
 };
 
+export interface ModelValidationMetrics {
+  modelId: 'resnet50' | 'densenet121' | 'inceptionv3';
+  name: string;
+  accuracy: number;
+  macroPrecision: number;
+  macroRecall: number;
+  macroF1: number;
+  weightedF1: number;
+  rank: number;
+  keyStrength: string;
+}
+
+export const VALIDATION_BENCHMARK_RESULTS: ModelValidationMetrics[] = [
+  {
+    modelId: 'resnet50',
+    name: 'ResNet-50',
+    accuracy: 0.675835,
+    macroPrecision: 0.564061,
+    macroRecall: 0.275975,
+    macroF1: 0.176283,
+    weightedF1: 0.589767,
+    rank: 1,
+    keyStrength: 'Highest overall validation accuracy (67.58%) and weighted F1-score (58.98%).',
+  },
+  {
+    modelId: 'densenet121',
+    name: 'DenseNet-121',
+    accuracy: 0.670596,
+    macroPrecision: 0.275141,
+    macroRecall: 0.261305,
+    macroF1: 0.179688,
+    weightedF1: 0.576371,
+    rank: 2,
+    keyStrength: 'Highest macro F1-score (17.97%) with 68% fewer parameters (8.1M).',
+  },
+  {
+    modelId: 'inceptionv3',
+    name: 'Inception-V3',
+    accuracy: 0.649640,
+    macroPrecision: 0.128141,
+    macroRecall: 0.244399,
+    macroF1: 0.153184,
+    weightedF1: 0.566860,
+    rank: 3,
+    keyStrength: 'Highest input resolution (299×299) capturing multi-scale spatial details.',
+  },
+];
+
+export const BEST_VALIDATION_MODEL_ID = 'resnet50';
+
+export const BASE_MODEL_KEYS = ['resnet50', 'densenet121', 'inceptionv3'] as const;
 export const ORDERED_MODEL_KEYS = ['resnet50', 'densenet121', 'inceptionv3'] as const;
+export const SELECTABLE_MODEL_KEYS: ModelId[] = ['resnet50', 'densenet121', 'inceptionv3', 'best'];
 
 // HAM10000 7 Diagnostic Classes in exact dataset order
 export const LESION_CLASSES: Record<LesionClassKey, LesionClassInfo> = {

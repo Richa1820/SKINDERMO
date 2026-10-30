@@ -1,0 +1,8 @@
+{
+  "active_models": [
+    "resnet50",
+    "densenet121",
+    "inceptionv3"
+  ],
+  "confidence_threshold": 0.5
+}

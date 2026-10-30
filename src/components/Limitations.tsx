@@ -29,6 +29,12 @@ export const Limitations: React.FC = () => {
       description:
         'Public dermoscopy archives predominantly feature fair skin types (Fitzpatrick types I–III from Australian and Austrian cohorts), limiting algorithmic generalization to higher melanin phototypes (Fitzpatrick IV–VI).',
     },
+    {
+      title: 'Closed-Set Bounds & Unsupported Images (e.g. Ringworm)',
+      icon: <AlertTriangle className="w-5 h-5 text-amber-600" />,
+      description:
+        'The models are strictly closed-set classifiers restricted to seven HAM10000 classes (akiec, bcc, bkl, df, mel, nv, vasc). When presented with unsupported conditions such as ringworm (tinea corporis), eczema, or rashes, softmax normalizes outputs to sum to 1.0, inevitably assigning the image to one of the seven classes. While low-confidence thresholding provides a helpful warning, confidence thresholds do not reliably detect all unsupported or out-of-distribution images.',
+    },
   ];
 
   return (

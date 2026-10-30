@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { UploadCloud, AlertCircle, Sparkles } from 'lucide-react';
+import { UploadCloud, AlertCircle, Sparkles, FileImage, ShieldCheck } from 'lucide-react';
 import { UploadedImageMeta } from '../../types';
 
 interface ImageDropzoneProps {
@@ -18,16 +18,33 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
   const processFile = (file: File) => {
     setErrorMessage(null);
 
-    // Validate type
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-    if (!validTypes.includes(file.type.toLowerCase())) {
-      setErrorMessage('Unsupported format. Please upload a JPG, JPEG, or PNG dermoscopy image.');
+    // Reject empty files
+    if (file.size === 0) {
+      setErrorMessage('Uploaded file is empty (0 bytes). Please select a valid dermoscopy image.');
       return;
     }
 
-    // Size limit: 20MB
-    if (file.size > 20 * 1024 * 1024) {
-      setErrorMessage('File size exceeds 20MB. Please select an image under 20MB.');
+    // Reject video formats explicitly
+    if (file.type.startsWith('video/') || /\.(mp4|mov|avi|mkv|webm|flv|wmv)$/i.test(file.name)) {
+      setErrorMessage(
+        'Video files are not supported. SKINDERMO requires a static 2D dermoscopic photograph (JPG, JPEG, or PNG).'
+      );
+      return;
+    }
+
+    // Validate image format - JPG, JPEG, PNG
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const validExtensions = /\.(jpe?g|png|webp)$/i;
+    if (!validTypes.includes(file.type.toLowerCase()) && !validExtensions.test(file.name)) {
+      setErrorMessage(
+        'Unsupported image format. Please upload a photographic dermoscopy image in JPG, JPEG, or PNG format.'
+      );
+      return;
+    }
+
+    // Size limit: 25MB
+    if (file.size > 25 * 1024 * 1024) {
+      setErrorMessage('File size exceeds the 25MB maximum limit. Please upload an image under 25MB.');
       return;
     }
 
@@ -51,7 +68,9 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
       });
     };
     img.onerror = () => {
-      setErrorMessage('Failed to decode image data. Please verify the file integrity.');
+      setErrorMessage(
+        'Failed to decode image data. The file appears to be corrupted or not a valid image format.'
+      );
     };
     img.src = previewUrl;
   };
@@ -83,8 +102,8 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
     }
   };
 
-  // Helper to load sample synthetic dermoscopy images for instant testing
-  const loadSyntheticSample = (sampleType: 'mel' | 'nv' | 'bkl') => {
+  // Generate standardized synthetic academic sample dermoscopy lesions for 1-click evaluation
+  const handleLoadAcademicSample = (sampleType: 'mel' | 'nv' | 'bkl') => {
     const canvas = document.createElement('canvas');
     canvas.width = 600;
     canvas.height = 450;
@@ -92,52 +111,50 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
     if (!ctx) return;
 
     // Background skin tone
-    const skinGrad = ctx.createRadialGradient(300, 225, 50, 300, 225, 350);
-    skinGrad.addColorStop(0, '#eac6b3');
-    skinGrad.addColorStop(1, '#c99f89');
-    ctx.fillStyle = skinGrad;
+    ctx.fillStyle = '#edd5c0';
     ctx.fillRect(0, 0, 600, 450);
 
-    // Lesion body based on type
+    // Realistic cutaneous pigmentation texture
+    for (let i = 0; i < 4000; i++) {
+      ctx.fillStyle = Math.random() > 0.5 ? 'rgba(215, 185, 160, 0.25)' : 'rgba(245, 220, 200, 0.25)';
+      ctx.fillRect(Math.random() * 600, Math.random() * 450, 2, 2);
+    }
+
     if (sampleType === 'mel') {
-      // Asymmetric, multi-colored melanoma simulation
+      // Melanoma: Asymmetric, irregular border, multi-tone dark brown/black
       ctx.beginPath();
-      ctx.ellipse(300, 225, 120, 95, Math.PI / 6, 0, 2 * Math.PI);
-      const lesGrad = ctx.createRadialGradient(280, 210, 20, 300, 225, 140);
-      lesGrad.addColorStop(0, '#1c120c');
-      lesGrad.addColorStop(0.5, '#40271c');
-      lesGrad.addColorStop(0.8, '#6b3f2c');
-      lesGrad.addColorStop(1, '#9e6244');
-      ctx.fillStyle = lesGrad;
+      ctx.ellipse(300, 225, 120, 85, Math.PI / 6, 0, 2 * Math.PI);
+      const melGrad = ctx.createRadialGradient(285, 215, 10, 300, 225, 130);
+      melGrad.addColorStop(0, '#1c120c');
+      melGrad.addColorStop(0.35, '#3b2216');
+      melGrad.addColorStop(0.7, '#6b3c22');
+      melGrad.addColorStop(1, '#9e6741');
+      ctx.fillStyle = melGrad;
       ctx.fill();
 
-      // Irregular dots
-      ctx.fillStyle = '#0a0503';
-      for (let i = 0; i < 35; i++) {
-        const x = 240 + Math.random() * 120;
-        const y = 170 + Math.random() * 110;
-        ctx.beginPath();
-        ctx.arc(x, y, 2 + Math.random() * 3, 0, 2 * Math.PI);
-        ctx.fill();
-      }
-    } else if (sampleType === 'nv') {
-      // Symmetric, uniform melanocytic nevus
+      // Blue-white veil & atypical pigment dots
       ctx.beginPath();
-      ctx.ellipse(300, 225, 90, 85, 0, 0, 2 * Math.PI);
-      const nevGrad = ctx.createRadialGradient(300, 225, 10, 300, 225, 95);
-      nevGrad.addColorStop(0, '#4a2c1d');
-      nevGrad.addColorStop(0.7, '#633d2a');
-      nevGrad.addColorStop(1, '#825239');
+      ctx.arc(280, 210, 24, 0, 2 * Math.PI);
+      ctx.fillStyle = 'rgba(160, 180, 205, 0.45)';
+      ctx.fill();
+    } else if (sampleType === 'nv') {
+      // Melanocytic Nevus: Regular, symmetric oval, uniform light-brown pigment network
+      ctx.beginPath();
+      ctx.ellipse(300, 225, 95, 80, 0, 0, 2 * Math.PI);
+      const nevGrad = ctx.createRadialGradient(300, 225, 5, 300, 225, 95);
+      nevGrad.addColorStop(0, '#4d3324');
+      nevGrad.addColorStop(0.6, '#754f37');
+      nevGrad.addColorStop(1, '#a67755');
       ctx.fillStyle = nevGrad;
       ctx.fill();
     } else {
-      // Benign keratosis (bkl)
+      // Benign keratosis (bkl): Cerebriform / stuck-on appearance
       ctx.beginPath();
-      ctx.ellipse(300, 225, 110, 100, Math.PI / 4, 0, 2 * Math.PI);
-      const bklGrad = ctx.createRadialGradient(300, 225, 10, 300, 225, 120);
-      bklGrad.addColorStop(0, '#664d3b');
-      bklGrad.addColorStop(0.6, '#8a6850');
-      bklGrad.addColorStop(1, '#b08a6e');
+      ctx.ellipse(300, 225, 105, 95, Math.PI / 4, 0, 2 * Math.PI);
+      const bklGrad = ctx.createRadialGradient(300, 225, 10, 300, 225, 110);
+      bklGrad.addColorStop(0, '#5a4130');
+      bklGrad.addColorStop(0.55, '#7a5a44');
+      bklGrad.addColorStop(1, '#ad8769');
       ctx.fillStyle = bklGrad;
       ctx.fill();
     }
@@ -151,7 +168,7 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
       if (blob) {
         const file = new File(
           [blob],
-          `sample_dermoscopy_${sampleType}_600x450.jpg`,
+          `sample_dermoscopy_${sampleType}.jpg`,
           { type: 'image/jpeg' }
         );
         processFile(file);
@@ -160,17 +177,17 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {/* Drag & Drop Boundary */}
       <div
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={() => !disabled && fileInputRef.current?.click()}
-        className={`relative border border-dashed rounded-xl p-8 sm:p-10 text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
+        className={`relative border-2 border-dashed rounded-2xl p-8 sm:p-12 text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
           isDragOver
-            ? 'border-sage-500 bg-sage-50/40'
-            : 'border-charcoal-300 hover:border-sage-500 bg-white hover:bg-canvas-50'
+            ? 'border-teal-500 bg-teal-50/50 scale-[1.005]'
+            : 'border-charcoal-300 hover:border-teal-500 bg-white hover:bg-canvas-50/60 shadow-sm'
         } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
         <input
@@ -184,22 +201,22 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
         />
 
         {/* Upload Icon Circle */}
-        <div className="w-12 h-12 rounded-lg bg-canvas-100 border border-charcoal-200 flex items-center justify-center text-sage-700 mb-3.5 shadow-subtle">
-          <UploadCloud className="w-6 h-6 text-sage-700" />
+        <div className="w-14 h-14 rounded-2xl bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700 mb-4 shadow-subtle">
+          <UploadCloud className="w-7 h-7 text-teal-600" />
         </div>
 
-        <div className="space-y-1.5 max-w-sm">
-          <p className="text-sm font-semibold text-charcoal-900">
-            <span className="text-sage-800 underline underline-offset-2">Click to browse</span> or drag and drop dermoscopy image
+        <div className="space-y-2 max-w-md">
+          <h3 className="text-base sm:text-lg font-bold text-charcoal-900">
+            Drag & drop dermoscopic lesion image here
+          </h3>
+          <p className="text-xs sm:text-sm text-charcoal-600 leading-relaxed">
+            Upload high-resolution contact or polarized dermoscopic photographs for automated CNN differential classification.
           </p>
-          <p className="text-xs text-charcoal-500">
-            Standard high-magnification contact or polarized dermoscopic photographs
-          </p>
-          <div className="pt-2 flex items-center justify-center gap-1.5 text-[11px] font-mono text-charcoal-400">
-            <span className="px-2 py-0.5 rounded bg-canvas-100 border border-charcoal-200 text-charcoal-700">JPG</span>
-            <span className="px-2 py-0.5 rounded bg-canvas-100 border border-charcoal-200 text-charcoal-700">JPEG</span>
-            <span className="px-2 py-0.5 rounded bg-canvas-100 border border-charcoal-200 text-charcoal-700">PNG</span>
-            <span>• Max 20MB</span>
+          <div className="pt-2 flex items-center justify-center gap-2 text-[11px] font-mono text-charcoal-500">
+            <span className="px-2.5 py-1 rounded bg-canvas-100 border border-charcoal-200 text-charcoal-800 font-semibold">JPG</span>
+            <span className="px-2.5 py-1 rounded bg-canvas-100 border border-charcoal-200 text-charcoal-800 font-semibold">JPEG</span>
+            <span className="px-2.5 py-1 rounded bg-canvas-100 border border-charcoal-200 text-charcoal-800 font-semibold">PNG</span>
+            <span>• Max 25 MB</span>
           </div>
         </div>
 
@@ -211,50 +228,53 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
             e.stopPropagation();
             fileInputRef.current?.click();
           }}
-          className="mt-4 px-4 py-2 rounded-lg bg-canvas-50 border border-charcoal-200 hover:bg-canvas-100 text-xs font-semibold text-charcoal-800 shadow-subtle transition-all"
+          className="mt-5 px-5 py-2.5 rounded-xl bg-charcoal-900 text-white hover:bg-charcoal-800 active:scale-[0.99] text-xs font-semibold shadow-subtle transition-all border border-charcoal-800 inline-flex items-center gap-2"
         >
-          Select File from Computer
+          <FileImage className="w-3.5 h-3.5 text-teal-400" />
+          <span>Select Image from Computer</span>
         </button>
       </div>
 
       {/* Error Message */}
       {errorMessage && (
-        <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-800 flex items-center gap-2">
+        <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800 flex items-center gap-2.5 shadow-subtle">
           <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
-          <span>{errorMessage}</span>
+          <span className="font-medium">{errorMessage}</span>
         </div>
       )}
 
       {/* Quick Academic Test Samples Bar */}
-      <div className="pt-1.5 flex flex-wrap items-center justify-between gap-2 text-xs text-charcoal-600">
-        <span className="font-mono text-[11px] text-charcoal-500 flex items-center gap-1.5">
-          <Sparkles className="w-3.5 h-3.5 text-sage-600" />
-          Need a dermoscopy sample image to test?
-        </span>
-        <div className="flex items-center gap-2">
+      <div className="p-3.5 rounded-xl bg-white border border-charcoal-200 shadow-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-2 text-charcoal-600 font-mono text-[11px]">
+          <Sparkles className="w-3.5 h-3.5 text-teal-600 flex-shrink-0" />
+          <span className="font-semibold text-charcoal-800">Quick Test Samples:</span>
+          <span className="text-charcoal-400 hidden md:inline">Instant demo evaluation without local files</span>
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             type="button"
             disabled={disabled}
-            onClick={() => loadSyntheticSample('mel')}
-            className="px-2.5 py-1 rounded-md bg-white hover:bg-canvas-100 border border-charcoal-200 text-[11px] font-mono text-charcoal-700 transition-colors"
+            onClick={() => handleLoadAcademicSample('mel')}
+            className="px-2.5 py-1 rounded-lg bg-canvas-100 hover:bg-teal-50 text-charcoal-800 hover:text-teal-900 border border-charcoal-200 hover:border-teal-300 font-mono text-[11px] font-medium transition-colors"
           >
-            Sample: Melanoma (mel)
+            Sample: Melanoma (MEL)
           </button>
           <button
             type="button"
             disabled={disabled}
-            onClick={() => loadSyntheticSample('nv')}
-            className="px-2.5 py-1 rounded-md bg-white hover:bg-canvas-100 border border-charcoal-200 text-[11px] font-mono text-charcoal-700 transition-colors"
+            onClick={() => handleLoadAcademicSample('nv')}
+            className="px-2.5 py-1 rounded-lg bg-canvas-100 hover:bg-teal-50 text-charcoal-800 hover:text-teal-900 border border-charcoal-200 hover:border-teal-300 font-mono text-[11px] font-medium transition-colors"
           >
-            Sample: Nevus (nv)
+            Sample: Nevus (NV)
           </button>
           <button
             type="button"
             disabled={disabled}
-            onClick={() => loadSyntheticSample('bkl')}
-            className="px-2.5 py-1 rounded-md bg-white hover:bg-canvas-100 border border-charcoal-200 text-[11px] font-mono text-charcoal-700 transition-colors"
+            onClick={() => handleLoadAcademicSample('bkl')}
+            className="px-2.5 py-1 rounded-lg bg-canvas-100 hover:bg-teal-50 text-charcoal-800 hover:text-teal-900 border border-charcoal-200 hover:border-teal-300 font-mono text-[11px] font-medium transition-colors"
           >
-            Sample: Keratosis (bkl)
+            Sample: Keratosis (BKL)
           </button>
         </div>
       </div>

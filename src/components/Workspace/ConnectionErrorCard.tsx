@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { RefreshCw, Copy, Check, Server, ShieldCheck } from 'lucide-react';
+import { RefreshCw, Copy, Check, Server, ShieldCheck, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { ModelId } from '../../types';
 import { EVALUATED_MODELS } from '../../constants/models';
 
@@ -26,6 +26,7 @@ export const ConnectionErrorCard: React.FC<ConnectionErrorCardProps> = ({
 }) => {
   const [copied, setCopied] = useState(false);
   const model = EVALUATED_MODELS[selectedModel];
+  const isValidationError = errorDetails?.statusCode === 400 || errorDetails?.statusCode === 422;
 
   const commandText = `cd backend\nuvicorn main:app --reload --port 8000`;
 
@@ -35,18 +36,93 @@ export const ConnectionErrorCard: React.FC<ConnectionErrorCardProps> = ({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  if (isValidationError) {
+    return (
+      <div className="rounded-xl bg-white border border-amber-300 p-6 sm:p-7 shadow-card space-y-5">
+        <div className="flex items-start gap-4">
+          <div className="w-10 h-10 rounded-lg bg-amber-50 border border-amber-300 flex items-center justify-center flex-shrink-0 text-amber-800">
+            <AlertTriangle className="w-5 h-5" />
+          </div>
+
+          <div className="space-y-1 flex-1">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[10px] font-semibold uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded">
+                Upload Validation Rejected (HTTP {errorDetails?.statusCode || 400})
+              </span>
+              <span className="text-xs font-mono text-charcoal-400">
+                Pre-Inference Validation
+              </span>
+            </div>
+
+            <h3 className="text-xl font-bold text-charcoal-900">
+              Invalid File or Unsupported Format
+            </h3>
+
+            <p className="text-xs sm:text-sm text-charcoal-700 leading-relaxed font-mono bg-canvas-50 p-3 rounded-lg border border-charcoal-200 mt-2">
+              {errorDetails?.rawMessage || errorMessage || 'The uploaded file could not be decoded as a valid image.'}
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-canvas-50 rounded-lg p-4 border border-charcoal-200 text-xs space-y-2">
+          <div className="font-semibold text-charcoal-800">
+            Accepted file specifications:
+          </div>
+          <ul className="space-y-1.5 text-charcoal-600 pl-4 list-disc">
+            <li>
+              <strong>Static 2D image formats:</strong> JPEG, PNG, WEBP, BMP, or TIFF.
+            </li>
+            <li>
+              <strong>Non-image rejection:</strong> Video files (MP4, AVI, MKV, MOV), documents (PDF), and non-image binaries are rejected before model inference.
+            </li>
+            <li>
+              <strong>Integrity:</strong> File must contain valid, uncorrupted raster pixel data (minimum 32×32 px, maximum 10,000×10,000 px).
+            </li>
+          </ul>
+        </div>
+
+        <div className="flex items-center justify-end gap-3 pt-2">
+          <button
+            type="button"
+            onClick={onRetry}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-charcoal-900 text-white font-semibold text-xs shadow-subtle hover:bg-charcoal-800 active:scale-[0.99] transition-all border border-charcoal-800"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Select Another Image</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const isTimeout =
+    errorMessage?.toLowerCase().includes('timed out') ||
+    errorDetails?.rawMessage?.toLowerCase().includes('aborterror');
+
   return (
     <div className="rounded-xl bg-white border border-charcoal-200 p-6 sm:p-7 shadow-card space-y-5">
       {/* Header */}
       <div className="flex items-start gap-4">
-        <div className="w-10 h-10 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center flex-shrink-0 text-amber-800">
-          <Server className="w-5 h-5" />
+        <div
+          className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+            isTimeout
+              ? 'bg-amber-50 border border-amber-300 text-amber-800'
+              : 'bg-rose-50 border border-rose-200 text-rose-800'
+          }`}
+        >
+          {isTimeout ? <AlertTriangle className="w-5 h-5" /> : <Server className="w-5 h-5" />}
         </div>
 
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="font-mono text-[10px] font-semibold uppercase tracking-wider bg-amber-50 text-amber-900 border border-amber-200 px-2 py-0.5 rounded">
-              Backend Service Offline
+            <span
+              className={`font-mono text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded border ${
+                isTimeout
+                  ? 'bg-amber-50 text-amber-900 border-amber-300'
+                  : 'bg-rose-50 text-rose-900 border-rose-200'
+              }`}
+            >
+              {isTimeout ? 'CPU Computation Timeout' : 'Backend Service Offline'}
             </span>
             <span className="text-xs font-mono text-charcoal-400">
               Target Model: {model.filename}
@@ -54,15 +130,23 @@ export const ConnectionErrorCard: React.FC<ConnectionErrorCardProps> = ({
           </div>
 
           <h3 className="text-xl font-bold text-charcoal-900">
-            {errorMessage || 'Cannot connect to Python FastAPI inference backend'}
+            {errorMessage || (isTimeout ? 'Inference request exceeded timeout threshold' : 'Cannot connect to Python FastAPI inference backend')}
           </h3>
 
           <p className="text-xs sm:text-sm text-charcoal-600 leading-relaxed">
-            The frontend successfully validated your dermoscopic image, but the deep learning server at{' '}
-            <code className="px-1.5 py-0.5 rounded bg-canvas-200 text-charcoal-800 font-mono text-xs">
-              {errorDetails?.url || 'http://localhost:8000'}/api/predict
-            </code>{' '}
-            is currently unreachable.
+            {isTimeout ? (
+              <>
+                The neural network forward pass took longer than the client timeout threshold. Because deep neural networks (such as ResNet-50 and Inception-V3) execute on local CPU hardware without dedicated GPU acceleration, forward passes require sustained processing time.
+              </>
+            ) : (
+              <>
+                The frontend successfully validated your dermoscopic image, but the deep learning server at{' '}
+                <code className="px-1.5 py-0.5 rounded bg-canvas-200 text-charcoal-800 font-mono text-xs">
+                  {errorDetails?.url || 'http://localhost:8000'}/api/predict
+                </code>{' '}
+                is currently unreachable.
+              </>
+            )}
           </p>
         </div>
       </div>

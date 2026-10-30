@@ -11,7 +11,7 @@ import { ModelId, BackendStatus } from './types';
 import { ApiService } from './services/api';
 
 export const App: React.FC = () => {
-  const [selectedModel, setSelectedModel] = useState<ModelId>('resnet50');
+  const [selectedModel, setSelectedModel] = useState<ModelId>('inceptionv3');
   const [activeSection, setActiveSection] = useState<string>('overview');
   const [backendStatus, setBackendStatus] = useState<BackendStatus>({
     online: false,
