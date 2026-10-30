@@ -1,5 +1,4 @@
-# SKINDERMO — AI-Powered Skin Lesion Classification Research System
-
+# SKINDERMO — A NOVEL AI-BASED SKIN DISEASE DETECTION SYSTEM
 > **Academic Research Prototype** comparing **ResNet-50**, **DenseNet-121**, and **Inception-V3** deep convolutional neural networks for automated dermoscopic skin lesion image classification across the 7 HAM10000 diagnostic categories.
 
 ---
